@@ -15,7 +15,7 @@
     <span class="release-tag">ProM R46</span>
   </span>
   <div class="header-meta">
-    <span class="header-user">Hello, Alysa Nguyen</span>
+    <span class="header-user">Hello, John Smith</span>
     <a href="#">Feedback</a>
     <a href="#">Help / User guide</a>
   </div>
@@ -24,6 +24,7 @@
 <!-- ── Tab Navigation ─────────────────────────────────────────────────────── -->
 <nav class="tab-nav" role="tablist">
   <button class="tab-btn active" data-tab="page-profile" role="tab">My profile</button>
+  <button class="tab-btn" data-tab="page-cv-builder" role="tab">CV builder</button>
   <button class="tab-btn" data-tab="page-find" role="tab">Find an open seat</button>
   <button class="tab-btn" data-tab="page-groups" role="tab">My groups</button>
 </nav>
@@ -73,19 +74,6 @@
         </div>
       </div>
 
-      <!-- Agent #1: Stale check trigger -->
-      <div class="card" style="margin-top:1rem">
-        <div class="card-header">
-          <span class="card-title">🤖 Agent: Stale listing check</span>
-        </div>
-        <p class="text-sm text-muted" style="margin-bottom:.75rem">
-          Scan your open seats for listings that haven't been updated recently and draft a nudge to the owner.
-        </p>
-        <button class="btn btn-primary btn-sm" id="btn-stale-check" onclick="runStaleCheckForProfile()">
-          Check for stale listings
-        </button>
-        <div id="stale-output" style="margin-top:.75rem"></div>
-      </div>
     </aside>
 
     <!-- Right column: recommendations + seats in play -->
@@ -98,6 +86,14 @@
         <div id="recs-container"><span class="spinner"></span></div>
       </div>
 
+      <div class="card cv-builder-cta-card" style="margin-bottom:1.25rem">
+        <div class="cv-builder-cta-copy">
+          <span class="card-title">CV builder</span>
+          <p class="cv-workbench-subtitle">Use the full ProM CV builder with the same section layout as the published resume view.</p>
+        </div>
+        <button class="btn btn-primary" type="button" onclick="openTab('page-cv-builder')">Open CV builder</button>
+      </div>
+
       <!-- Current open seats in play -->
       <div>
         <div class="section-header">
@@ -105,9 +101,98 @@
           <span class="section-toggle">▾</span>
         </div>
         <div id="profile-seats-body">
-          <p class="text-muted text-sm" style="padding:.5rem 0">
-            No open seats currently in play. Use "Find an open seat" to browse listings.
-          </p>
+          <div class="seat-tracker-legend">
+            <div><strong>Professional status:</strong> <span class="badge badge-P">P</span> Proposed <span class="badge badge-S">S</span> Selected <span class="badge badge-N">N</span> Not Selected <span class="badge badge-W">W</span> Withdrawn</div>
+            <div class="text-muted text-sm">Personal status tracker helps you track your own progress separately from the official ProM status.</div>
+          </div>
+
+          <div class="card seat-stale-check-card">
+            <div class="card-header">
+              <span class="card-title">🤖 Agent: Stale listing check</span>
+            </div>
+            <p class="text-sm text-muted" style="margin-bottom:.75rem">
+              Check the seats you already applied to and flag listings with no movement so you can follow up faster.
+            </p>
+            <button class="btn btn-primary btn-sm" id="btn-stale-check" onclick="runStaleCheckForProfile()">
+              Check my applied seats for stale movement
+            </button>
+            <div id="stale-output" style="margin-top:.75rem"></div>
+          </div>
+
+          <div class="seat-tracker-list">
+            <div class="seat-tracker-card">
+              <div class="seat-tracker-main">
+                <div class="seat-tracker-title-row">
+                  <div>
+                    <div class="seat-tracker-title">Senior Full-Stack Developer</div>
+                    <div class="seat-tracker-subtitle">Citywide Systems Modernization · Remote</div>
+                  </div>
+                  <span class="badge badge-P">P</span>
+                </div>
+                <div class="seat-tracker-meta">Professional status: Proposed</div>
+                <div class="seat-tracker-personal-row">
+                  <label class="seat-tracker-label" for="personal-status-1">Personal status tracker</label>
+                  <select id="personal-status-1" class="personal-status-select" onchange="updatePersonalStatusLabel(this, 'personal-status-label-1')">
+                    <option selected>Pending</option>
+                    <option>Interview Scheduled</option>
+                    <option>Interview Completed</option>
+                    <option>Follow-Up Required</option>
+                    <option>No Response</option>
+                  </select>
+                  <span id="personal-status-label-1" class="personal-status-pill personal-status-pending">Pending</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="seat-tracker-card">
+              <div class="seat-tracker-main">
+                <div class="seat-tracker-title-row">
+                  <div>
+                    <div class="seat-tracker-title">Cloud Integration Engineer</div>
+                    <div class="seat-tracker-subtitle">Northwind Transformation Program · Austin, TX</div>
+                  </div>
+                  <span class="badge badge-S">S</span>
+                </div>
+                <div class="seat-tracker-meta">Professional status: Selected</div>
+                <div class="seat-tracker-personal-row">
+                  <label class="seat-tracker-label" for="personal-status-2">Personal status tracker</label>
+                  <select id="personal-status-2" class="personal-status-select" onchange="updatePersonalStatusLabel(this, 'personal-status-label-2')">
+                    <option>Pending</option>
+                    <option selected>Interview Scheduled</option>
+                    <option>Interview Completed</option>
+                    <option>Follow-Up Required</option>
+                    <option>No Response</option>
+                  </select>
+                  <span id="personal-status-label-2" class="personal-status-pill personal-status-interview">Interview Scheduled</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="seat-tracker-card">
+              <div class="seat-tracker-main">
+                <div class="seat-tracker-title-row">
+                  <div>
+                    <div class="seat-tracker-title">Application Developer</div>
+                    <div class="seat-tracker-subtitle">Example Digital Services Initiative · Washington</div>
+                  </div>
+                  <span class="badge badge-W">W</span>
+                </div>
+                <div class="seat-tracker-meta">Professional status: Withdrawn</div>
+                <div class="seat-tracker-personal-row">
+                  <label class="seat-tracker-label" for="personal-status-3">Personal status tracker</label>
+                  <select id="personal-status-3" class="personal-status-select" onchange="updatePersonalStatusLabel(this, 'personal-status-label-3')">
+                    <option>Pending</option>
+                    <option>Interview Scheduled</option>
+                    <option selected>Interview Completed</option>
+                    <option>Follow-Up Required</option>
+                    <option>No Response</option>
+                  </select>
+                  <span id="personal-status-label-3" class="personal-status-pill personal-status-complete">Interview Completed</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
         </div>
       </div>
     </div>
@@ -236,6 +321,222 @@
     <div style="padding:2rem;text-align:center;color:var(--text-muted)">
       Click "Find an open seat" tab to load listings.
     </div>
+  </div>
+</main>
+
+<!-- ══════════════════════════════════════════════════════════════════════════
+     PAGE: CV Builder
+════════════════════════════════════════════════════════════════════════════ -->
+<main id="page-cv-builder" class="page" role="tabpanel">
+  <h1 class="page-title">CV Builder</h1>
+  <p class="ibm-confidential">IBM Confidential</p>
+
+  <div class="cv-builder-shell">
+    <section class="cv-builder-main">
+      <div class="card cv-builder-toolbar-card">
+        <div>
+          <span class="card-title">CV Builder</span>
+          <p class="cv-workbench-subtitle">Edit, review, and publish your CV directly in ProM without leaving the site.</p>
+        </div>
+        <div class="cv-editor-actions">
+          <button class="btn btn-secondary btn-sm" type="button" onclick="enhanceCVSummary()">Enhance with AI</button>
+          <button class="btn btn-primary btn-sm" type="button" onclick="saveCVEdits()">Save CV</button>
+        </div>
+      </div>
+
+      <div class="cv-builder-scroll-area card" style="margin-top:1rem">
+        <div class="cv-builder-alert">
+          Rich text editing now available. Use the editor below to maintain your CV directly in ProM.
+        </div>
+
+        <section id="cv-contact-information" class="cv-builder-section is-active">
+          <div class="cv-section-header-row">
+            <div>
+              <h2>Contact information</h2>
+            </div>
+            <button class="btn btn-ghost btn-sm cv-action-btn" type="button" data-section-label="Contact information">Edit</button>
+          </div>
+          <div class="cv-contact-block cv-editable-content">
+            <strong>John Smith</strong>
+            <span>Senior Developer</span>
+            <span>(555) 010-1234</span>
+            <span>john.smith@example.com</span>
+          </div>
+        </section>
+
+        <section id="cv-overview-and-key-skills" class="cv-builder-section">
+          <div class="cv-section-header-row">
+            <div>
+              <h2>Overview and key skills</h2>
+              <p class="cv-section-description">Write a short summary of your professional background, core skills, and credentials.</p>
+            </div>
+            <button class="btn btn-ghost btn-sm cv-action-btn" type="button" data-section-label="Overview and key skills">Edit</button>
+          </div>
+          <label class="cv-field-label" for="cv-editor">Overview</label>
+          <textarea id="cv-editor" class="cv-editor-textarea">John Smith is a software developer with experience delivering modern web applications, API integrations, and cloud-ready solutions for enterprise teams.</textarea>
+          <div class="cv-detail-group cv-editable-content">
+            <label class="cv-field-label">Key skills</label>
+            <ul class="cv-bullet-list">
+              <li>Programming Languages: JavaScript, TypeScript, Java</li>
+              <li>Frameworks: React, Node.js, Express</li>
+              <li>Cloud &amp; DevOps: Docker, CI/CD, Kubernetes</li>
+            </ul>
+          </div>
+          <div class="cv-detail-group cv-editable-content">
+            <label class="cv-field-label">Digital credentials</label>
+            <ul class="cv-plain-list">
+              <li>Cloud Application Development Badge — 2025</li>
+              <li>Secure Engineering Fundamentals — 2025</li>
+              <li>Modern Web Delivery Certification — 2026</li>
+            </ul>
+          </div>
+        </section>
+
+        <section id="cv-work-experience" class="cv-builder-section">
+          <div class="cv-section-header-row">
+            <div>
+              <h2>Work experience</h2>
+              <p class="cv-section-description">List employers, roles, and the impact of your work.</p>
+            </div>
+            <button class="btn btn-ghost btn-sm cv-action-btn" type="button" data-section-label="Work experience">Edit</button>
+          </div>
+          <div class="cv-entry-card cv-editable-content">
+            <h3>Senior Developer</h3>
+            <p class="cv-entry-meta">Northwind Digital · Austin, TX</p>
+            <p class="cv-entry-meta">Jan 2023 – Present</p>
+            <p>Builds internal and client-facing applications, improves delivery workflows, and contributes to reusable engineering patterns for delivery teams.</p>
+          </div>
+        </section>
+
+        <section id="cv-ibm-assignment-history" class="cv-builder-section">
+          <div class="cv-section-header-row">
+            <div>
+              <h2>IBM assignment history</h2>
+              <p class="cv-section-description">Highlight internal projects longer than two months and your delivery contributions.</p>
+            </div>
+            <button class="btn btn-ghost btn-sm cv-action-btn" type="button" data-section-label="IBM assignment history">Edit</button>
+          </div>
+          <div class="cv-entry-card cv-editable-content">
+            <h3>Platform Modernization Support</h3>
+            <p class="cv-entry-meta">Example Federal Agency · Mar 2025 – Sep 2025</p>
+            <ul class="cv-bullet-list">
+              <li>Supported planning, coordination, and technical delivery activities.</li>
+              <li>Helped document workflows and implementation milestones.</li>
+            </ul>
+          </div>
+        </section>
+
+        <section id="cv-additional-client-history" class="cv-builder-section">
+          <div class="cv-section-header-row">
+            <div>
+              <h2>Additional client history</h2>
+              <p class="cv-section-description">Capture prior client work that is not already represented in IBM assignment history.</p>
+            </div>
+            <button class="btn btn-secondary btn-sm cv-action-btn" type="button" data-section-label="Additional client history">Add</button>
+          </div>
+          <p class="text-muted cv-empty-state">No client history added yet.</p>
+        </section>
+
+        <section id="cv-industry-experience" class="cv-builder-section">
+          <div class="cv-section-header-row">
+            <div>
+              <h2>Industry experience</h2>
+              <p class="cv-section-description">List up to two industry areas that best represent your experience.</p>
+            </div>
+            <button class="btn btn-ghost btn-sm cv-action-btn" type="button" data-section-label="Industry experience">Edit</button>
+          </div>
+          <div class="cv-entry-card compact cv-editable-content">
+            <p><strong>Financial Services</strong></p>
+            <p class="cv-entry-meta">Proficiency: Intermediate</p>
+          </div>
+        </section>
+
+        <section id="cv-education" class="cv-builder-section">
+          <div class="cv-section-header-row">
+            <div>
+              <h2>Education</h2>
+              <p class="cv-section-description">Enter academic or formal education entries.</p>
+            </div>
+            <button class="btn btn-ghost btn-sm cv-action-btn" type="button" data-section-label="Education">Edit</button>
+          </div>
+          <div class="cv-entry-card compact cv-editable-content">
+            <p><strong>B.S. in Computer Science</strong></p>
+            <p class="cv-entry-meta">Example State University, 2022</p>
+          </div>
+        </section>
+
+        <section id="cv-languages" class="cv-builder-section">
+          <div class="cv-section-header-row">
+            <div>
+              <h2>Languages</h2>
+              <p class="cv-section-description">List your language skills and proficiency.</p>
+            </div>
+            <button class="btn btn-ghost btn-sm cv-action-btn" type="button" data-section-label="Languages">Edit</button>
+          </div>
+          <div class="cv-entry-card compact cv-editable-content">
+            <p><strong>English</strong></p>
+            <p class="cv-entry-meta">Spoken proficiency: Fluent</p>
+            <p class="cv-entry-meta">Written proficiency: Fluent</p>
+          </div>
+        </section>
+
+        <section id="cv-publications" class="cv-builder-section">
+          <div class="cv-section-header-row">
+            <div>
+              <h2>Publications</h2>
+              <p class="cv-section-description">Books or articles you have authored or co-authored.</p>
+            </div>
+            <button class="btn btn-secondary btn-sm cv-action-btn" type="button" data-section-label="Publications">Add</button>
+          </div>
+          <p class="text-muted cv-empty-state">No publications added yet.</p>
+        </section>
+
+        <section id="cv-memberships" class="cv-builder-section">
+          <div class="cv-section-header-row">
+            <div>
+              <h2>Memberships</h2>
+              <p class="cv-section-description">Professional organizations relevant to your field.</p>
+            </div>
+            <button class="btn btn-secondary btn-sm cv-action-btn" type="button" data-section-label="Memberships">Add</button>
+          </div>
+          <p class="text-muted cv-empty-state">No memberships added yet.</p>
+        </section>
+
+        <section id="cv-additional-information" class="cv-builder-section">
+          <div class="cv-section-header-row">
+            <div>
+              <h2>Additional information</h2>
+              <p class="cv-section-description">Supplemental details about projects, leadership, and achievements.</p>
+            </div>
+            <button class="btn btn-ghost btn-sm cv-action-btn" type="button" data-section-label="Additional information">Edit</button>
+          </div>
+          <div class="cv-entry-card cv-editable-content">
+            <h3>Enterprise Portal Refresh</h3>
+            <p class="cv-entry-meta">Technical contributor · 2026</p>
+            <ul class="cv-bullet-list">
+              <li>Helped deliver updated user experiences for a large internal platform.</li>
+              <li>Supported implementation planning, testing, and release readiness.</li>
+              <li>Contributed to shared components and engineering documentation.</li>
+            </ul>
+          </div>
+        </section>
+      </div>
+    </section>
+
+    <aside class="cv-builder-sidebar card">
+      <div class="cv-builder-sidebar-title">CV sections</div>
+      <button class="cv-nav-item active" type="button" data-cv-target="cv-contact-information">Contact information</button>
+      <button class="cv-nav-item" type="button" data-cv-target="cv-overview-and-key-skills">Overview and key skills</button>
+      <button class="cv-nav-item" type="button" data-cv-target="cv-work-experience">Work experience</button>
+      <button class="cv-nav-item" type="button" data-cv-target="cv-ibm-assignment-history">IBM assignment history</button>
+      <button class="cv-nav-item" type="button" data-cv-target="cv-additional-client-history">Additional client history</button>
+      <button class="cv-nav-item" type="button" data-cv-target="cv-industry-experience">Industry experience</button>
+      <button class="cv-nav-item" type="button" data-cv-target="cv-education">Education</button>
+      <button class="cv-nav-item" type="button" data-cv-target="cv-languages">Languages</button>
+      <button class="cv-nav-item" type="button" data-cv-target="cv-publications">Publications</button>
+      <button class="cv-nav-item" type="button" data-cv-target="cv-memberships">Memberships</button>
+      <button class="cv-nav-item" type="button" data-cv-target="cv-additional-information">Additional information</button>
+    </aside>
   </div>
 </main>
 

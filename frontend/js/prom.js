@@ -35,15 +35,18 @@ async function apiPost(path, body) {
 }
 
 // ── Tab Navigation ────────────────────────────────────────────────────────────
+function openTab(target) {
+  const btn = document.querySelector(`.tab-btn[data-tab="${target}"]`);
+  if (!btn) return;
+  document.querySelectorAll(".tab-btn").forEach((b) => b.classList.remove("active"));
+  document.querySelectorAll(".page").forEach((p) => p.classList.remove("active"));
+  btn.classList.add("active");
+  document.getElementById(target).classList.add("active");
+}
+
 function initTabs() {
   document.querySelectorAll(".tab-btn").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      const target = btn.dataset.tab;
-      document.querySelectorAll(".tab-btn").forEach((b) => b.classList.remove("active"));
-      document.querySelectorAll(".page").forEach((p) => p.classList.remove("active"));
-      btn.classList.add("active");
-      document.getElementById(target).classList.add("active");
-    });
+    btn.addEventListener("click", () => openTab(btn.dataset.tab));
   });
 }
 
@@ -54,6 +57,78 @@ function initCollapse() {
       header.classList.toggle("collapsed");
       const body = header.nextElementSibling;
       body.style.display = header.classList.contains("collapsed") ? "none" : "";
+    });
+  });
+}
+
+function setActiveCVSection(targetId) {
+  const section = document.getElementById(targetId);
+  if (!section) return null;
+
+  document.querySelectorAll(".cv-nav-item[data-cv-target]").forEach((item) => {
+    item.classList.toggle("active", item.dataset.cvTarget === targetId);
+  });
+  document.querySelectorAll(".cv-builder-section").forEach((item) => {
+    item.classList.toggle("is-active", item.id === targetId);
+  });
+
+  return section;
+}
+
+function initCVBuilderNav() {
+  document.querySelectorAll(".cv-nav-item[data-cv-target]").forEach((button) => {
+    button.addEventListener("click", () => {
+      const section = setActiveCVSection(button.dataset.cvTarget);
+      if (!section) return;
+      section.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  });
+}
+
+function createInlineEditor(section) {
+  const existing = section.querySelector(".cv-inline-editor");
+  if (existing) return existing;
+
+  const content = section.querySelector(".cv-editable-content, .cv-empty-state");
+  if (!content) return null;
+
+  const editor = document.createElement("textarea");
+  editor.className = "cv-inline-editor";
+  editor.value = content.classList.contains("cv-empty-state")
+    ? ""
+    : content.innerText.replace(/\n{2,}/g, "\n").trim();
+
+  content.hidden = true;
+  content.insertAdjacentElement("afterend", editor);
+  return editor;
+}
+
+function initCVActionButtons() {
+  document.querySelectorAll(".cv-action-btn").forEach((button) => {
+    button.addEventListener("click", () => {
+      const section = button.closest(".cv-builder-section");
+      if (!section) return;
+
+      setActiveCVSection(section.id);
+      const primaryEditor = section.querySelector("#cv-editor");
+      const label = button.dataset.sectionLabel || section.querySelector("h2")?.textContent || "section";
+
+      if (primaryEditor) {
+        primaryEditor.focus();
+        primaryEditor.scrollIntoView({ behavior: "smooth", block: "center" });
+        showToast(`Editing ${label.toLowerCase()}`, "info");
+        return;
+      }
+
+      const inlineEditor = createInlineEditor(section);
+      if (!inlineEditor) return;
+
+      inlineEditor.focus();
+      inlineEditor.scrollIntoView({ behavior: "smooth", block: "center" });
+      button.textContent = "Edit";
+      button.classList.remove("btn-secondary");
+      button.classList.add("btn-ghost");
+      showToast(`Editing ${label.toLowerCase()}`, "info");
     });
   });
 }
@@ -131,6 +206,22 @@ function sendNudge() {
   const text = document.getElementById("stale-nudge-text")?.value;
   // TODO: integrate with Slack/email API when adding real agent
   showToast("Nudge sent to seat owner", "success");
+}
+
+function getPersonalStatusClass(value) {
+  const normalized = value.toLowerCase();
+  if (normalized.includes("interview scheduled")) return "personal-status-interview";
+  if (normalized.includes("interview completed")) return "personal-status-complete";
+  if (normalized.includes("follow-up")) return "personal-status-follow-up";
+  if (normalized.includes("no response")) return "personal-status-no-response";
+  return "personal-status-pending";
+}
+
+function updatePersonalStatusLabel(select, labelId) {
+  const label = document.getElementById(labelId);
+  if (!label) return;
+  label.textContent = select.value;
+  label.className = `personal-status-pill ${getPersonalStatusClass(select.value)}`;
 }
 
 // ── Agent #7: Recommendations for current user ────────────────────────────────
@@ -300,6 +391,7 @@ function sendOutreach(seatId) {
 // ── Agent #8: CV tailor ───────────────────────────────────────────────────────
 async function openCVTailorPanel(seatId) {
   const panel = document.getElementById(`agent-panel-${seatId}`);
+  const editor = document.getElementById("cv-editor");
   panel.innerHTML = '<div style="padding:.5rem"><span class="spinner"></span> Tailoring CV...</div>';
 
   try {
@@ -310,15 +402,20 @@ async function openCVTailorPanel(seatId) {
     const changeItems = result.changes_summary
       .map((c) => `<li>${c}</li>`)
       .join("");
+    if (editor) {
+      editor.value = result.tailored_cv_text;
+      updateCVTimestamp();
+    }
     panel.innerHTML = `
       <div class="ai-panel">
-        <div class="ai-panel-header"><span class="ai-icon">📄</span> Tailored CV — review changes</div>
+        <div class="ai-panel-header"><span class="ai-icon">📄</span> Tailored CV applied in ProM editor</div>
         <div class="ai-panel-body">
+          <p>Your role-specific CV draft is now loaded into the native ProM editor above.</p>
           <ul class="cv-changes">${changeItems}</ul>
-          <textarea style="min-height:180px">${result.tailored_cv_text}</textarea>
           <div class="ai-panel-actions">
-            <button class="btn btn-primary btn-sm" onclick="downloadCV('${seatId}')">Download .docx</button>
-            <button class="btn btn-secondary btn-sm" onclick="document.getElementById('agent-panel-${seatId}').innerHTML=''">Cancel</button>
+            <button class="btn btn-primary btn-sm" onclick="focusCVEditor()">Review in editor</button>
+            <button class="btn btn-secondary btn-sm" onclick="saveCVEdits()">Save draft</button>
+            <button class="btn btn-secondary btn-sm" onclick="document.getElementById('agent-panel-${seatId}').innerHTML=''">Dismiss</button>
           </div>
         </div>
       </div>`;
@@ -327,9 +424,37 @@ async function openCVTailorPanel(seatId) {
   }
 }
 
-function downloadCV(seatId) {
-  // TODO: generate and download .docx when wiring real CV repository
-  showToast("CV download started", "success");
+function updateCVTimestamp() {
+  showToast("CV updated in ProM", "info");
+}
+
+function focusCVEditor() {
+  const editor = document.getElementById("cv-editor");
+  if (!editor) return;
+  editor.focus();
+  editor.scrollIntoView({ behavior: "smooth", block: "center" });
+}
+
+function saveCVEdits() {
+  updateCVTimestamp();
+  showToast("CV changes saved in ProM", "success");
+}
+
+function enhanceCVSummary() {
+  const editor = document.getElementById("cv-editor");
+  if (!editor) return;
+
+  const text = editor.value.trim();
+  if (!text) {
+    showToast("Add some CV content before enhancing it", "info");
+    return;
+  }
+
+  if (!text.includes("Results-focused")) {
+    editor.value = `Results-focused ${text.charAt(0).toLowerCase()}${text.slice(1)}`;
+  }
+  updateCVTimestamp();
+  showToast("CV summary enhanced in ProM", "success");
 }
 
 // ── Agent #2: Mismatch check ──────────────────────────────────────────────────
@@ -371,6 +496,8 @@ async function findMatchingSeats() {
 document.addEventListener("DOMContentLoaded", () => {
   initTabs();
   initCollapse();
+  initCVBuilderNav();
+  initCVActionButtons();
   initSeatCards();
 
   // Load profile data
