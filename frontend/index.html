@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>IBM Professional Marketplace</title>
+  <link rel="stylesheet" href="css/prom.css" />
+</head>
+<body>
+
+<!-- ── App Header ─────────────────────────────────────────────────────────── -->
+<header class="app-header">
+  <span class="header-brand">
+    <strong>IBM</strong> Professional Marketplace
+    <span class="release-tag">ProM R46</span>
+  </span>
+  <div class="header-meta">
+    <span class="header-user">Hello, Alysa Nguyen</span>
+    <a href="#">Feedback</a>
+    <a href="#">Help / User guide</a>
+  </div>
+</header>
+
+<!-- ── Tab Navigation ─────────────────────────────────────────────────────── -->
+<nav class="tab-nav" role="tablist">
+  <button class="tab-btn active" data-tab="page-profile" role="tab">My profile</button>
+  <button class="tab-btn" data-tab="page-find" role="tab">Find an open seat</button>
+  <button class="tab-btn" data-tab="page-groups" role="tab">My groups</button>
+</nav>
+
+<!-- ══════════════════════════════════════════════════════════════════════════
+     PAGE: My Profile
+════════════════════════════════════════════════════════════════════════════ -->
+<main id="page-profile" class="page active" role="tabpanel">
+  <h1 class="page-title">My profile</h1>
+  <p class="ibm-confidential">IBM Confidential</p>
+
+  <div class="profile-grid">
+    <!-- Left column: profile info card -->
+    <aside>
+      <div class="card profile-card">
+        <div class="profile-info-item">
+          <label>Professional ID</label>
+          <span id="prof-id">—</span>
+        </div>
+        <div class="profile-info-item">
+          <label>Name</label>
+          <span id="prof-name">—</span>
+        </div>
+        <div class="profile-info-item">
+          <label>Availability date</label>
+          <span id="prof-avail">—</span>
+        </div>
+        <div class="profile-info-item">
+          <label>Band</label>
+          <span id="prof-band">—</span>
+        </div>
+        <div class="profile-info-item">
+          <label>Location</label>
+          <span id="prof-location">—</span>
+        </div>
+        <div class="profile-info-item">
+          <label>Skills</label>
+          <span id="prof-skills">—</span>
+        </div>
+
+        <hr class="divider" />
+        <div class="profile-actions">
+          <button class="btn btn-secondary btn-sm">Professional inquiry…</button>
+          <button class="btn btn-secondary btn-sm" onclick="findMatchingSeats(); document.querySelector('[data-tab=page-find]').click()">Find matching seats</button>
+          <button class="btn btn-secondary btn-sm">View util %</button>
+          <button class="btn btn-secondary btn-sm">View assignment data</button>
+        </div>
+      </div>
+
+      <!-- Agent #1: Stale check trigger -->
+      <div class="card" style="margin-top:1rem">
+        <div class="card-header">
+          <span class="card-title">🤖 Agent: Stale listing check</span>
+        </div>
+        <p class="text-sm text-muted" style="margin-bottom:.75rem">
+          Scan your open seats for listings that haven't been updated recently and draft a nudge to the owner.
+        </p>
+        <button class="btn btn-primary btn-sm" id="btn-stale-check" onclick="runStaleCheckForProfile()">
+          Check for stale listings
+        </button>
+        <div id="stale-output" style="margin-top:.75rem"></div>
+      </div>
+    </aside>
+
+    <!-- Right column: recommendations + seats in play -->
+    <div>
+      <!-- Agent #7: AI recommendations -->
+      <div class="card" style="margin-bottom:1.25rem">
+        <div class="card-header">
+          <span class="card-title">🤖 Agent: Recommended seats for you</span>
+        </div>
+        <div id="recs-container"><span class="spinner"></span></div>
+      </div>
+
+      <!-- Current open seats in play -->
+      <div>
+        <div class="section-header">
+          <h2>Current open seats in play</h2>
+          <span class="section-toggle">▾</span>
+        </div>
+        <div id="profile-seats-body">
+          <p class="text-muted text-sm" style="padding:.5rem 0">
+            No open seats currently in play. Use "Find an open seat" to browse listings.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- ══════════════════════════════════════════════════════════════════════════
+     PAGE: Find an Open Seat
+════════════════════════════════════════════════════════════════════════════ -->
+<main id="page-find" class="page" role="tabpanel">
+  <h1 class="page-title">Find an open seat</h1>
+  <p class="ibm-confidential">IBM Confidential</p>
+
+  <div class="find-seat-header">
+    <div class="matching-count" id="matching-count">Number of matching positions still needed: —</div>
+    <button class="btn btn-secondary btn-sm" onclick="findMatchingSeats()">Find matching seats for me</button>
+  </div>
+
+  <!-- Search bar -->
+  <div class="search-bar" style="margin-bottom:1rem">
+    <div class="search-input-wrap">
+      <input
+        type="text"
+        id="search-input"
+        class="search-input"
+        placeholder="Search all text-based fields…"
+        autocomplete="off"
+      />
+      <span class="search-icon">🔍</span>
+    </div>
+    <button class="btn btn-primary" onclick="searchSeats()">Search</button>
+  </div>
+
+  <!-- Filter row -->
+  <div class="filter-row">
+    <select class="filter-select" onchange="loadSeats(1, currentPerPage, document.getElementById('search-input').value)">
+      <option value="">All locations</option>
+      <option value="Remote">Remote</option>
+      <option value="Washington">Washington</option>
+      <option value="Herndon">Herndon</option>
+      <option value="Wallops Island">Wallops Island</option>
+      <option value="Reston">Reston</option>
+    </select>
+    <select class="filter-select">
+      <option value="">All sectors</option>
+      <option value="Public">Public</option>
+      <option value="Distribution">Distribution</option>
+    </select>
+    <select class="filter-select">
+      <option value="">Remote?</option>
+      <option value="true">Yes</option>
+      <option value="false">No</option>
+    </select>
+  </div>
+
+  <!-- Browse by category -->
+  <div class="browse-categories">
+    <div class="browse-categories-header">
+      <h2>Browse by category</h2>
+    </div>
+    <div class="categories-grid">
+      <div class="category-col">
+        <h3>Request owner</h3>
+        <ul>
+          <li><a href="#">Karen Bean/Rocket Center/IBM</a><span class="count">(22)</span></li>
+          <li><a href="#">Alyssa B Porter/Rocket Center/IBM</a><span class="count">(12)</span></li>
+          <li><a href="#">Alicia D Joiner/Rocket Center/IBM</a><span class="count">(11)</span></li>
+          <li><a href="#">Bridget Davidson/Sterling Forest/IBM</a><span class="count">(10)</span></li>
+        </ul>
+      </div>
+      <div class="category-col">
+        <h3>Client &amp; project</h3>
+        <ul>
+          <li><a href="#">US Dept of Homeland Security</a><span class="count">(10)</span></li>
+          <li><a href="#">US Dept of Defense Health Affairs</a><span class="count">(9)</span></li>
+          <li><a href="#">US Dept of the Army</a><span class="count">(9)</span></li>
+          <li><a href="#">US Dept of Defense</a><span class="count">(6)</span></li>
+          <li><a href="#">Total Solutions Inc</a><span class="count">(5)</span></li>
+        </ul>
+      </div>
+      <div class="category-col">
+        <h3>Work location</h3>
+        <ul>
+          <li><label><input type="checkbox" /> <a href="#">Remote</a><span class="count">(31)</span></label></li>
+          <li><label><input type="checkbox" /> <a href="#">Washington</a><span class="count">(12)</span></label></li>
+          <li><label><input type="checkbox" /> <a href="#">Herndon</a><span class="count">(6)</span></label></li>
+          <li><label><input type="checkbox" /> <a href="#">Wallops Island</a><span class="count">(5)</span></label></li>
+          <li><label><input type="checkbox" /> <a href="#">Reston</a><span class="count">(1)</span></label></li>
+        </ul>
+        <button class="btn btn-secondary btn-sm" style="margin-top:.5rem" onclick="loadSeats()">GO</button>
+      </div>
+      <div class="category-col">
+        <h3>Work remotely</h3>
+        <ul>
+          <li><a href="#">Yes</a><span class="count">(57)</span></li>
+          <li><a href="#">No</a><span class="count">(2)</span></li>
+        </ul>
+      </div>
+      <div class="category-col">
+        <h3>Sector &amp; Industry</h3>
+        <ul>
+          <li><label><input type="checkbox" /> <a href="#">Public</a><span class="count">(58)</span></label></li>
+          <li><label><input type="checkbox" /> <a href="#">Distribution</a><span class="count">(1)</span></label></li>
+        </ul>
+        <button class="btn btn-secondary btn-sm" style="margin-top:.5rem" onclick="loadSeats()">GO</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Results meta -->
+  <div class="results-meta" id="results-meta">
+    <span></span>
+  </div>
+
+  <!-- Candidate status legend -->
+  <div class="flex-row" style="margin-bottom:.75rem;font-size:12px;color:var(--text-muted)">
+    Candidate status:
+    <span class="badge badge-P">P</span> Proposed &nbsp;
+    <span class="badge badge-S">S</span> Selected &nbsp;
+    <span class="badge badge-N">N</span> Not Selected &nbsp;
+    <span class="badge badge-W">W</span> Withdrawn
+  </div>
+
+  <!-- Seat list -->
+  <div id="seats-list">
+    <div style="padding:2rem;text-align:center;color:var(--text-muted)">
+      Click "Find an open seat" tab to load listings.
+    </div>
+  </div>
+</main>
+
+<!-- ══════════════════════════════════════════════════════════════════════════
+     PAGE: My Groups
+════════════════════════════════════════════════════════════════════════════ -->
+<main id="page-groups" class="page" role="tabpanel">
+  <h1 class="page-title">My groups</h1>
+  <p class="ibm-confidential">IBM Confidential</p>
+
+  <p class="text-muted" style="margin-bottom:1.25rem">
+    Groups allow you to share saved searches and collaborate with colleagues on open seats.
+  </p>
+
+  <button class="btn btn-primary" style="margin-bottom:1.5rem">+ Create a group</button>
+
+  <div class="groups-grid">
+    <div class="group-card">
+      <h3>DC Metro Public Sector</h3>
+      <p class="group-meta">12 members · 3 saved searches</p>
+      <div class="group-actions">
+        <button class="btn btn-secondary btn-sm">View group</button>
+        <button class="btn btn-ghost btn-sm">Leave</button>
+      </div>
+    </div>
+    <div class="group-card">
+      <h3>Band 6–7 Cloud Professionals</h3>
+      <p class="group-meta">8 members · 5 saved searches</p>
+      <div class="group-actions">
+        <button class="btn btn-secondary btn-sm">View group</button>
+        <button class="btn btn-ghost btn-sm">Leave</button>
+      </div>
+    </div>
+    <div class="group-card">
+      <h3>Rocket Center Openings</h3>
+      <p class="group-meta">31 members · 7 saved searches</p>
+      <div class="group-actions">
+        <button class="btn btn-secondary btn-sm">View group</button>
+        <button class="btn btn-ghost btn-sm">Leave</button>
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- ── Toast container ────────────────────────────────────────────────────── -->
+<div id="toast-container" class="toast-container" aria-live="polite"></div>
+
+<script src="js/prom.js"></script>
+</body>
+</html>
