@@ -296,18 +296,35 @@ async function loadSeats(page = 1, perPage = 30, query = "") {
 }
 
 function renderSeatRow(seat) {
-  const statusBadge = seat.candidate_status
-    ? `<span class="badge badge-${seat.candidate_status}" title="Candidate status">${seat.candidate_status}</span>`
-    : "";
-
   const rowClass = seat.is_stale ? 'stale-row' : '';
+
+  // Build status breakdown display like: 9 ( P 4 S 5 )
+  let profsDisplay = seat.profs_in_play.toString();
+  if (seat.status_breakdown) {
+    const parts = [];
+    if (seat.status_breakdown.proposed > 0) {
+      parts.push(`<span class="badge badge-P">P</span> ${seat.status_breakdown.proposed}`);
+    }
+    if (seat.status_breakdown.selected > 0) {
+      parts.push(`<span class="badge badge-S">S</span> ${seat.status_breakdown.selected}`);
+    }
+    if (seat.status_breakdown.not_selected > 0) {
+      parts.push(`<span class="badge badge-N">N</span> ${seat.status_breakdown.not_selected}`);
+    }
+    if (seat.status_breakdown.withdrawn > 0) {
+      parts.push(`<span class="badge badge-W">W</span> ${seat.status_breakdown.withdrawn}`);
+    }
+    if (parts.length > 0) {
+      profsDisplay = `${seat.profs_in_play} ( ${parts.join(' ')} )`;
+    }
+  }
 
   return `
     <tr class="${rowClass}" data-seat-id="${seat.seat_id}">
       <td><input type="checkbox" class="seat-checkbox" value="${seat.seat_id}" /></td>
       <td><a href="#" onclick="expandSeatDetails('${seat.seat_id}'); return false;">${seat.client_name}</a></td>
       <td>${seat.title}</td>
-      <td>${seat.profs_in_play} ${statusBadge}</td>
+      <td class="profs-in-play-cell">${profsDisplay}</td>
       <td>${seat.owner_notes_id}</td>
       <td>${seat.service}</td>
       <td>${seat.requested_band_high}</td>

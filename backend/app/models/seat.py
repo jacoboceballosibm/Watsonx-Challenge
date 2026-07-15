@@ -17,6 +17,13 @@ class SeatType(str, Enum):
     REAL = "real"
 
 
+class StatusBreakdown(BaseModel):
+    proposed: int = 0
+    selected: int = 0
+    not_selected: int = 0
+    withdrawn: int = 0
+
+
 class Seat(BaseModel):
     seat_id: str
     title: str
@@ -34,6 +41,7 @@ class Seat(BaseModel):
     days_since_update: int
     candidate_status: Optional[CandidateStatus] = None
     profs_in_play: int = 0
+    status_breakdown: Optional[StatusBreakdown] = None
     seat_type: SeatType = SeatType.REAL
     is_stale: bool = False
     mismatch_flag: bool = False

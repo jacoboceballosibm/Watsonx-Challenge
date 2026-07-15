@@ -981,6 +981,14 @@ h3 { font-size: 1rem; font-weight: 600; }
   vertical-align: middle;
 }
 
+.seats-table .profs-in-play-cell {
+  white-space: nowrap;
+}
+
+.seats-table .profs-in-play-cell .badge {
+  margin: 0 2px;
+}
+
 /* ── Misc Utilities ─────────────────────────────────────────────────────────── */
 .divider { border: none; border-top: 1px solid var(--border); margin: 1.25rem 0; }
 .flex-row { display: flex; align-items: center; gap: .5rem; }
