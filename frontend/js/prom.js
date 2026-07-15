@@ -267,9 +267,9 @@ let currentPerPage = 30;
 let currentQuery = "";
 
 async function loadSeats(page = 1, perPage = 30, query = "") {
-  const container = document.getElementById("seats-list");
+  const tableBody = document.getElementById("seats-table-body");
   const resultsMeta = document.getElementById("results-meta");
-  container.innerHTML = '<div style="padding:2rem;text-align:center"><span class="spinner"></span></div>';
+  tableBody.innerHTML = '<tr><td colspan="8" style="padding:2rem;text-align:center"><span class="spinner"></span></td></tr>';
 
   try {
     const params = new URLSearchParams({ page, per_page: perPage });
@@ -281,7 +281,7 @@ async function loadSeats(page = 1, perPage = 30, query = "") {
       `Number of matching positions still needed: <strong>${data.total}</strong>`;
 
     resultsMeta.innerHTML = `
-      Results ${(page - 1) * perPage + 1}–${Math.min(page * perPage, data.total)} of ${data.total} 
+      Results ${(page - 1) * perPage + 1}–${Math.min(page * perPage, data.total)} of ${data.total}
       &nbsp;|&nbsp; Per page:
       <span class="per-page-links">
         <a href="#" onclick="changePerPage(10)" class="${perPage === 10 ? "active" : ""}">10</a>
@@ -289,10 +289,51 @@ async function loadSeats(page = 1, perPage = 30, query = "") {
         <a href="#" onclick="changePerPage(50)" class="${perPage === 50 ? "active" : ""}">50</a>
       </span>`;
 
-    container.innerHTML = data.seats.map(renderSeatCard).join("");
+    tableBody.innerHTML = data.seats.map(renderSeatRow).join("");
   } catch (err) {
-    container.innerHTML = `<p style="color:var(--ibm-red);padding:1rem">Could not load seats — ${err.message}</p>`;
+    tableBody.innerHTML = `<tr><td colspan="8" style="color:var(--ibm-red);padding:1rem">Could not load seats — ${err.message}</td></tr>`;
   }
+}
+
+function renderSeatRow(seat) {
+  const statusBadge = seat.candidate_status
+    ? `<span class="badge badge-${seat.candidate_status}" title="Candidate status">${seat.candidate_status}</span>`
+    : "";
+
+  const rowClass = seat.is_stale ? 'stale-row' : '';
+
+  return `
+    <tr class="${rowClass}" data-seat-id="${seat.seat_id}">
+      <td><input type="checkbox" class="seat-checkbox" value="${seat.seat_id}" /></td>
+      <td><a href="#" onclick="expandSeatDetails('${seat.seat_id}'); return false;">${seat.client_name}</a></td>
+      <td>${seat.title}</td>
+      <td>${seat.profs_in_play} ${statusBadge}</td>
+      <td>${seat.owner_notes_id}</td>
+      <td>${seat.service}</td>
+      <td>${seat.requested_band_high}</td>
+      <td>${seat.requested_band_low}</td>
+      <td>${seat.contract_owning_country}</td>
+    </tr>`;
+}
+
+function expandSeatDetails(seatId) {
+  const seat = allSeats.find(s => s.seat_id === seatId);
+  if (!seat) return;
+
+  // Show detailed view in a modal or expanded row
+  showToast(`Viewing details for ${seat.title}`, "info");
+  // TODO: Implement detailed view
+}
+
+function toggleSelectAll() {
+  const selectAll = document.getElementById("select-all-seats");
+  const checkboxes = document.querySelectorAll(".seat-checkbox");
+  checkboxes.forEach(cb => cb.checked = selectAll.checked);
+}
+
+function toggleColumnManager() {
+  showToast("Column manager coming soon", "info");
+  // TODO: Implement column visibility manager
 }
 
 function renderSeatCard(seat) {
@@ -488,6 +529,37 @@ async function findMatchingSeats() {
   document.getElementById("search-input").value = "";
   await loadSeats(1, currentPerPage, "");
   showToast("Showing all available seats — AI match scoring coming with watsonx integration", "info");
+}
+
+// ── Apply category filters ────────────────────────────────────────────────────
+function applyFilters() {
+  const checkboxes = document.querySelectorAll(".filter-checkbox:checked");
+  const filters = {
+    owner: [],
+    client: [],
+    location: [],
+    remote: [],
+    sector: []
+  };
+
+  checkboxes.forEach(cb => {
+    const filterType = cb.dataset.filter;
+    filters[filterType].push(cb.value);
+  });
+
+  // Build query string for filters
+  let filterQuery = "";
+  if (filters.owner.length) filterQuery += filters.owner.join(" OR ");
+  if (filters.client.length) filterQuery += (filterQuery ? " OR " : "") + filters.client.join(" OR ");
+  if (filters.location.length) filterQuery += (filterQuery ? " OR " : "") + filters.location.join(" OR ");
+  if (filters.sector.length) filterQuery += (filterQuery ? " OR " : "") + filters.sector.join(" OR ");
+
+  // For remote filter, just use the first value if any
+  const remoteFilter = filters.remote.length ? filters.remote[0] : null;
+
+  currentQuery = filterQuery;
+  loadSeats(1, currentPerPage, filterQuery);
+  showToast(`Applied ${checkboxes.length} filter(s)`, "info");
 }
 
 // ══════════════════════════════════════════════════════════════════════════════

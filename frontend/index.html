@@ -231,15 +231,17 @@
     <select class="filter-select" onchange="loadSeats(1, currentPerPage, document.getElementById('search-input').value)">
       <option value="">All locations</option>
       <option value="Remote">Remote</option>
-      <option value="Washington">Washington</option>
-      <option value="Herndon">Herndon</option>
-      <option value="Wallops Island">Wallops Island</option>
-      <option value="Reston">Reston</option>
+      <option value="New York">New York</option>
+      <option value="San Francisco">San Francisco</option>
+      <option value="Chicago">Chicago</option>
+      <option value="Boston">Boston</option>
     </select>
     <select class="filter-select">
       <option value="">All sectors</option>
-      <option value="Public">Public</option>
-      <option value="Distribution">Distribution</option>
+      <option value="Financial Services">Financial Services</option>
+      <option value="Healthcare">Healthcare</option>
+      <option value="Retail">Retail</option>
+      <option value="Manufacturing">Manufacturing</option>
     </select>
     <select class="filter-select">
       <option value="">Remote?</option>
@@ -257,47 +259,52 @@
       <div class="category-col">
         <h3>Request owner</h3>
         <ul>
-          <li><a href="#">Karen Bean/Rocket Center/IBM</a><span class="count">(22)</span></li>
-          <li><a href="#">Alyssa B Porter/Rocket Center/IBM</a><span class="count">(12)</span></li>
-          <li><a href="#">Alicia D Joiner/Rocket Center/IBM</a><span class="count">(11)</span></li>
-          <li><a href="#">Bridget Davidson/Sterling Forest/IBM</a><span class="count">(10)</span></li>
+          <li><label><input type="checkbox" class="filter-checkbox" data-filter="owner" value="Marcus Chen/Innovation Lab/IBM" /> Marcus Chen/Innovation Lab/IBM<span class="count">(18)</span></label></li>
+          <li><label><input type="checkbox" class="filter-checkbox" data-filter="owner" value="Sarah Williams/Cloud Center/IBM" /> Sarah Williams/Cloud Center/IBM<span class="count">(15)</span></label></li>
+          <li><label><input type="checkbox" class="filter-checkbox" data-filter="owner" value="David Rodriguez/Platform Team/IBM" /> David Rodriguez/Platform Team/IBM<span class="count">(12)</span></label></li>
+          <li><label><input type="checkbox" class="filter-checkbox" data-filter="owner" value="Jennifer Kim/Data Solutions/IBM" /> Jennifer Kim/Data Solutions/IBM<span class="count">(9)</span></label></li>
         </ul>
+        <button class="btn btn-secondary btn-sm" style="margin-top:.5rem" onclick="applyFilters()">GO</button>
       </div>
       <div class="category-col">
         <h3>Client &amp; project</h3>
         <ul>
-          <li><a href="#">US Dept of Homeland Security</a><span class="count">(10)</span></li>
-          <li><a href="#">US Dept of Defense Health Affairs</a><span class="count">(9)</span></li>
-          <li><a href="#">US Dept of the Army</a><span class="count">(9)</span></li>
-          <li><a href="#">US Dept of Defense</a><span class="count">(6)</span></li>
-          <li><a href="#">Total Solutions Inc</a><span class="count">(5)</span></li>
+          <li><label><input type="checkbox" class="filter-checkbox" data-filter="client" value="TechCorp Digital Transformation" /> TechCorp Digital Transformation<span class="count">(14)</span></label></li>
+          <li><label><input type="checkbox" class="filter-checkbox" data-filter="client" value="Global Finance Modernization" /> Global Finance Modernization<span class="count">(11)</span></label></li>
+          <li><label><input type="checkbox" class="filter-checkbox" data-filter="client" value="Healthcare Systems Integration" /> Healthcare Systems Integration<span class="count">(9)</span></label></li>
+          <li><label><input type="checkbox" class="filter-checkbox" data-filter="client" value="Retail Analytics Platform" /> Retail Analytics Platform<span class="count">(8)</span></label></li>
+          <li><label><input type="checkbox" class="filter-checkbox" data-filter="client" value="Energy Grid Optimization" /> Energy Grid Optimization<span class="count">(6)</span></label></li>
         </ul>
+        <button class="btn btn-secondary btn-sm" style="margin-top:.5rem" onclick="applyFilters()">GO</button>
       </div>
       <div class="category-col">
         <h3>Work location</h3>
         <ul>
-          <li><label><input type="checkbox" /> <a href="#">Remote</a><span class="count">(31)</span></label></li>
-          <li><label><input type="checkbox" /> <a href="#">Washington</a><span class="count">(12)</span></label></li>
-          <li><label><input type="checkbox" /> <a href="#">Herndon</a><span class="count">(6)</span></label></li>
-          <li><label><input type="checkbox" /> <a href="#">Wallops Island</a><span class="count">(5)</span></label></li>
-          <li><label><input type="checkbox" /> <a href="#">Reston</a><span class="count">(1)</span></label></li>
+          <li><label><input type="checkbox" class="filter-checkbox" data-filter="location" value="Remote" /> Remote<span class="count">(28)</span></label></li>
+          <li><label><input type="checkbox" class="filter-checkbox" data-filter="location" value="New York" /> New York<span class="count">(10)</span></label></li>
+          <li><label><input type="checkbox" class="filter-checkbox" data-filter="location" value="San Francisco" /> San Francisco<span class="count">(7)</span></label></li>
+          <li><label><input type="checkbox" class="filter-checkbox" data-filter="location" value="Chicago" /> Chicago<span class="count">(5)</span></label></li>
+          <li><label><input type="checkbox" class="filter-checkbox" data-filter="location" value="Boston" /> Boston<span class="count">(3)</span></label></li>
         </ul>
-        <button class="btn btn-secondary btn-sm" style="margin-top:.5rem" onclick="loadSeats()">GO</button>
+        <button class="btn btn-secondary btn-sm" style="margin-top:.5rem" onclick="applyFilters()">GO</button>
       </div>
       <div class="category-col">
         <h3>Work remotely</h3>
         <ul>
-          <li><a href="#">Yes</a><span class="count">(57)</span></li>
-          <li><a href="#">No</a><span class="count">(2)</span></li>
+          <li><label><input type="checkbox" class="filter-checkbox" data-filter="remote" value="true" /> Yes<span class="count">(42)</span></label></li>
+          <li><label><input type="checkbox" class="filter-checkbox" data-filter="remote" value="false" /> No<span class="count">(11)</span></label></li>
         </ul>
+        <button class="btn btn-secondary btn-sm" style="margin-top:.5rem" onclick="applyFilters()">GO</button>
       </div>
       <div class="category-col">
         <h3>Sector &amp; Industry</h3>
         <ul>
-          <li><label><input type="checkbox" /> <a href="#">Public</a><span class="count">(58)</span></label></li>
-          <li><label><input type="checkbox" /> <a href="#">Distribution</a><span class="count">(1)</span></label></li>
+          <li><label><input type="checkbox" class="filter-checkbox" data-filter="sector" value="Financial Services" /> Financial Services<span class="count">(20)</span></label></li>
+          <li><label><input type="checkbox" class="filter-checkbox" data-filter="sector" value="Healthcare" /> Healthcare<span class="count">(15)</span></label></li>
+          <li><label><input type="checkbox" class="filter-checkbox" data-filter="sector" value="Retail" /> Retail<span class="count">(12)</span></label></li>
+          <li><label><input type="checkbox" class="filter-checkbox" data-filter="sector" value="Manufacturing" /> Manufacturing<span class="count">(6)</span></label></li>
         </ul>
-        <button class="btn btn-secondary btn-sm" style="margin-top:.5rem" onclick="loadSeats()">GO</button>
+        <button class="btn btn-secondary btn-sm" style="margin-top:.5rem" onclick="applyFilters()">GO</button>
       </div>
     </div>
   </div>
@@ -316,8 +323,43 @@
     <span class="badge badge-W">W</span> Withdrawn
   </div>
 
-  <!-- Seat list -->
-  <div id="seats-list">
+  <!-- Seat table view -->
+  <div id="seats-table-container">
+    <div class="seats-table-toolbar">
+      <button class="btn btn-ghost btn-sm" onclick="toggleColumnManager()">Add/remove columns</button>
+      <div style="margin-left:auto;display:flex;gap:.5rem;">
+        <button class="btn btn-secondary btn-sm">Put me in play</button>
+        <button class="btn btn-secondary btn-sm">Add to group...</button>
+      </div>
+    </div>
+    <div style="overflow-x:auto;">
+      <table class="seats-table" id="seats-table">
+        <thead>
+          <tr>
+            <th><input type="checkbox" id="select-all-seats" onclick="toggleSelectAll()" /></th>
+            <th>Client name</th>
+            <th>Title</th>
+            <th>Profs in play</th>
+            <th>Owner notes ID</th>
+            <th>Service</th>
+            <th>Requested band high</th>
+            <th>Requested band low</th>
+            <th>Contract owning country</th>
+          </tr>
+        </thead>
+        <tbody id="seats-table-body">
+          <tr>
+            <td colspan="9" style="padding:2rem;text-align:center;color:var(--text-muted)">
+              Click "Find an open seat" tab to load listings.
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Seat card list (original view) -->
+  <div id="seats-list" style="display:none;">
     <div style="padding:2rem;text-align:center;color:var(--text-muted)">
       Click "Find an open seat" tab to load listings.
     </div>

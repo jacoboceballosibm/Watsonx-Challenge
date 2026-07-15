@@ -906,6 +906,81 @@ h3 { font-size: 1rem; font-weight: 600; }
 .toast.info { border-left: 4px solid var(--ibm-blue); }
 @keyframes slideIn { from { transform: translateX(120%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
 
+/* ── Seats Table ────────────────────────────────────────────────────────────── */
+#seats-table-container {
+  margin-top: 1.5rem;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.seats-table-toolbar {
+  display: flex;
+  align-items: center;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+}
+
+.seats-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.seats-table thead {
+  background: var(--surface);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.seats-table th {
+  padding: 12px 16px;
+  text-align: left;
+  font-weight: 600;
+  color: var(--text);
+  border-bottom: 2px solid var(--border);
+  white-space: nowrap;
+}
+
+.seats-table tbody tr {
+  border-bottom: 1px solid var(--border-subtle);
+  transition: background-color var(--transition);
+}
+
+.seats-table tbody tr:hover {
+  background: var(--surface-hover);
+}
+
+.seats-table tbody tr.stale-row {
+  background: var(--ibm-orange-light);
+}
+
+.seats-table tbody tr.stale-row:hover {
+  background: #ffe8d6;
+}
+
+.seats-table td {
+  padding: 12px 16px;
+  color: var(--text-secondary);
+}
+
+.seats-table td a {
+  color: var(--ibm-blue);
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.seats-table td a:hover {
+  text-decoration: underline;
+}
+
+.seats-table .badge {
+  margin-left: 4px;
+  vertical-align: middle;
+}
+
 /* ── Misc Utilities ─────────────────────────────────────────────────────────── */
 .divider { border: none; border-top: 1px solid var(--border); margin: 1.25rem 0; }
 .flex-row { display: flex; align-items: center; gap: .5rem; }
