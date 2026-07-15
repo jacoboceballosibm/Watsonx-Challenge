@@ -400,11 +400,8 @@ function renderSeatRow(seat) {
 }
 
 function expandSeatDetails(seatId) {
-  const seat = allSeats.find(s => s.seat_id === seatId);
-  if (!seat) return;
-
-  // Show detailed view in a modal or expanded row
-  showToast(`Viewing details for ${seat.title}`, "info");
+  // Navigate to detail page
+  window.location.href = `seat-detail.html?id=${seatId}`;
   // TODO: Implement detailed view
 }
 

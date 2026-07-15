@@ -1,0 +1,747 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Position Details — IBM ProM</title>
+  <link rel="stylesheet" href="css/prom.css" />
+</head>
+<body>
+
+<!-- ── App Header ─────────────────────────────────────────────────────────── -->
+<header class="app-header">
+  <span class="header-brand">
+    <strong>IBM</strong> Professional Marketplace
+    <span class="release-tag">ProM R46</span>
+  </span>
+  <div class="header-meta">
+    <span class="header-user" id="header-user">Hello, User</span>
+    <a href="#">Feedback</a>
+    <a href="#">Help / User guide</a>
+    <a href="#" onclick="logout(); return false;" style="color: var(--ibm-red)">Sign out</a>
+  </div>
+</header>
+
+<!-- ── Back Navigation ───────────────────────────────────────────────────────── -->
+<div style="background:var(--bg);border-bottom:1px solid var(--border);padding:.75rem 1.5rem">
+  <a href="index.html" style="color:var(--ibm-blue);text-decoration:none;font-size:14px">← Back to Find an open seat</a>
+</div>
+
+<!-- ── Main Content ──────────────────────────────────────────────────────────── -->
+<main style="max-width:1400px;margin:0 auto;padding:2rem 1.5rem">
+
+  <!-- Loading State -->
+  <div id="loading-state" style="text-align:center;padding:4rem">
+    <span class="spinner"></span>
+    <p style="margin-top:1rem;color:var(--text-muted)">Loading position details...</p>
+  </div>
+
+  <!-- Content Container (hidden until loaded) -->
+  <div id="content-container" style="display:none">
+
+    <!-- Position Header -->
+    <div style="margin-bottom:2rem">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:1rem">
+        <div style="flex:1">
+          <h1 id="position-title" style="font-size:2rem;font-weight:600;margin-bottom:.5rem"></h1>
+          <div id="position-meta" style="display:flex;gap:1rem;align-items:center;flex-wrap:wrap;color:var(--text-muted);font-size:14px"></div>
+        </div>
+        <div style="display:flex;gap:.75rem">
+          <button class="btn btn-primary" onclick="showToast('Application submitted!', 'success')">Apply for Position</button>
+          <button class="btn btn-secondary" onclick="showToast('Position saved', 'success')">Save</button>
+        </div>
+      </div>
+
+      <!-- Status Bar -->
+      <div id="status-bar" style="background:linear-gradient(135deg,#e3f2fd 0%,#f3e5f5 100%);border-radius:8px;padding:1.25rem;border:1px solid #bbdefb">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1.5rem"></div>
+      </div>
+    </div>
+
+    <!-- Latest Updates Section -->
+    <div class="card" style="margin-bottom:2rem;border-left:4px solid var(--ibm-blue)">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
+        <h2 style="font-size:1.25rem;font-weight:600">📢 Latest Updates</h2>
+        <span id="last-updated" style="font-size:12px;color:var(--text-muted)"></span>
+      </div>
+
+      <div id="latest-update" style="background:var(--ibm-blue-light);padding:1rem;border-radius:4px;margin-bottom:1rem"></div>
+
+      <div style="font-size:13px;color:var(--text-muted)">
+        💡 <strong>Tip:</strong> Updates appear here automatically so you don't have to dig through comments
+      </div>
+    </div>
+
+    <!-- Two Column Layout -->
+    <div style="display:grid;grid-template-columns:2fr 1fr;gap:2rem">
+
+      <!-- Left Column: Main Details -->
+      <div>
+
+        <!-- Quick Facts -->
+        <div class="card" style="margin-bottom:1.5rem">
+          <h3 style="font-weight:600;margin-bottom:1rem;font-size:1.125rem">Quick Facts</h3>
+          <div id="quick-facts" style="display:grid;grid-template-columns:1fr 1fr;gap:1rem"></div>
+        </div>
+
+        <!-- Job Description -->
+        <div class="card" style="margin-bottom:1.5rem">
+          <h3 style="font-weight:600;margin-bottom:1rem;font-size:1.125rem">Job Role & Specialty</h3>
+          <p id="job-role" style="line-height:1.6;margin-bottom:1rem"></p>
+          <div id="service-area" style="background:var(--surface);padding:1rem;border-radius:4px"></div>
+        </div>
+
+        <!-- Required Skills -->
+        <div class="card" style="margin-bottom:1.5rem">
+          <h3 style="font-weight:600;margin-bottom:1rem;font-size:1.125rem">Required Skills</h3>
+          <ul id="skills-list" style="line-height:1.8;padding-left:1.25rem"></ul>
+        </div>
+
+        <!-- Project Details -->
+        <div class="card" style="margin-bottom:1.5rem">
+          <h3 style="font-weight:600;margin-bottom:1rem;font-size:1.125rem">Project & Contract</h3>
+          <div id="project-details" class="detail-grid"></div>
+        </div>
+
+        <!-- Activity Timeline -->
+        <div class="card">
+          <h3 style="font-weight:600;margin-bottom:1rem;font-size:1.125rem">Activity Timeline</h3>
+          <div id="activity-timeline" class="timeline"></div>
+        </div>
+
+      </div>
+
+      <!-- Right Column: Sidebar -->
+      <div>
+
+        <!-- Opportunity Owner Card -->
+        <div id="owner-card" class="card" style="margin-bottom:1.5rem"></div>
+
+        <!-- Key Contacts -->
+        <div class="card" style="margin-bottom:1.5rem">
+          <h3 style="font-weight:600;margin-bottom:1rem;font-size:1.125rem">Key Contacts</h3>
+          <div id="contacts-list"></div>
+        </div>
+
+        <!-- Staffing Plan -->
+        <div class="card" style="margin-bottom:1.5rem">
+          <h3 style="font-weight:600;margin-bottom:1rem;font-size:1.125rem">Staffing Plan</h3>
+          <div id="staffing-plan"></div>
+        </div>
+
+        <!-- Additional Info -->
+        <div class="card">
+          <h3 style="font-weight:600;margin-bottom:1rem;font-size:1.125rem">Additional Info</h3>
+          <div id="additional-info"></div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+
+</main>
+
+<script src="js/prom.js"></script>
+<script>
+// Generate completely random fake data
+function generateFakeData() {
+  const positions = [
+    "Senior Cloud Architect", "Full-Stack Developer", "Data Engineer", "DevOps Specialist",
+    "AI/ML Engineer", "Cybersecurity Analyst", "Product Manager", "Solutions Architect",
+    "Backend Engineer", "Frontend Developer", "Site Reliability Engineer", "Platform Engineer",
+    "Technical Lead", "Software Engineer", "Infrastructure Architect", "Application Architect"
+  ];
+
+  const clients = [
+    "Global Finance Corp", "TechVenture Industries", "Metro Healthcare Systems",
+    "Advanced Manufacturing Inc", "Energy Solutions Group", "Retail Innovations Ltd",
+    "Federal Digital Services", "State Technology Bureau", "Education Platform Network",
+    "Transportation Authority", "Environmental Systems Inc", "Research Institute Labs"
+  ];
+
+  const locations = [
+    "Remote", "New York, NY", "San Francisco, CA", "Austin, TX", "Seattle, WA",
+    "Chicago, IL", "Boston, MA", "Denver, CO", "Atlanta, GA", "Washington, DC",
+    "Portland, OR", "Miami, FL", "Dallas, TX", "Phoenix, AZ", "Philadelphia, PA"
+  ];
+
+  const firstNames = ["Jordan", "Alex", "Sam", "Taylor", "Morgan", "Casey", "Riley", "Avery", "Quinn", "Reese"];
+  const lastNames = ["Martinez", "Thompson", "Rivera", "Chen", "Kim", "O'Brien", "Patel", "Johnson", "Williams", "Garcia"];
+
+  const services = [
+    "Cloud Engineering", "Application Development", "Data & Analytics",
+    "Cybersecurity Services", "DevOps & Automation", "AI/ML Solutions",
+    "Enterprise Architecture", "Platform Engineering", "Infrastructure Services"
+  ];
+
+  const serviceAreas = [
+    "Digital Strategy", "Cloud Migration", "Data Modernization", "Security Operations",
+    "Application Modernization", "Platform Services", "Infrastructure Optimization"
+  ];
+
+  const sectors = ["Financial Services", "Healthcare", "Retail", "Manufacturing", "Government", "Energy", "Technology", "Education"];
+
+  const skills = [
+    "Cloud platforms (AWS, Azure, GCP)", "Kubernetes and containerization", "CI/CD pipeline development",
+    "Python, Java, or Go programming", "Infrastructure as Code (Terraform, CloudFormation)",
+    "Microservices architecture", "API design and development", "Database design and optimization",
+    "Security best practices", "Agile methodologies", "DevOps tools and practices",
+    "Monitoring and observability", "Distributed systems design", "Performance tuning"
+  ];
+
+  const updates = [
+    "Position urgently needed for Q3 project ramp-up. Fast-track interviews available for qualified candidates.",
+    "Client confirmed budget approval. Ready to move quickly on strong technical candidates.",
+    "Requirements updated to include cloud certification. See revised skill list below.",
+    "Extended search to remote candidates due to local talent shortage. Timezone flexibility required.",
+    "Three candidates in final round. Decision expected within 48 hours. Additional candidates welcome.",
+    "Project timeline moved up. Start date now 2 weeks earlier than originally posted.",
+    "Client interested in part-time or contract arrangement for right candidate. Hours negotiable.",
+    "Backfill for unexpected departure. Immediate start strongly preferred.",
+    "Team expansion approved. May convert to multiple positions if strong candidate pool.",
+    "Requirements clarified after stakeholder meeting. Technical assessment added to interview process."
+  ];
+
+  const contractStatuses = ["Signed", "In Negotiation", "Pending Approval", "Renewed"];
+  const clientTypes = ["External Client", "Internal Project", "Government Contract", "Strategic Partner"];
+
+  const rand = (arr) => arr[Math.floor(Math.random() * arr.length)];
+  const randInt = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+  const randBool = () => Math.random() > 0.5;
+  const randSubset = (arr, count) => {
+    const shuffled = [...arr].sort(() => 0.5 - Math.random());
+    return shuffled.slice(0, count);
+  };
+
+  const profsInPlay = randInt(0, 18);
+  const proposed = randInt(0, Math.max(1, Math.floor(profsInPlay * 0.6)));
+  const selected = randInt(0, Math.max(0, Math.floor((profsInPlay - proposed) * 0.4)));
+  const remaining = Math.max(0, profsInPlay - proposed - selected);
+
+  const daysAgo = randInt(1, 45);
+  const updateDate = new Date();
+  updateDate.setDate(updateDate.getDate() - daysAgo);
+
+  const firstName = rand(firstNames);
+  const lastName = rand(lastNames);
+  const ownerName = `${firstName} ${lastName}`;
+
+  // Generate additional contacts
+  const projectContactFirst = rand(firstNames);
+  const projectContactLast = rand(lastNames);
+  const projectContactName = `${projectContactFirst} ${projectContactLast}`;
+
+  const delegateFirst = rand(firstNames);
+  const delegateLast = rand(lastNames);
+  const delegateName = `${delegateFirst} ${delegateLast}`;
+
+  const opportunityOwnerFirst = rand(firstNames);
+  const opportunityOwnerLast = rand(lastNames);
+  const opportunityOwnerName = `${opportunityOwnerFirst} ${opportunityOwnerLast}`;
+
+  const departments = ["Innovation Lab", "Cloud Center", "Data Solutions", "Platform Team", "Security Division", "AI Research"];
+  const laborCategories = ["IBM Consulting Portfolio", "Technology Services", "Strategic Solutions", "Digital Consulting"];
+  const fulfillmentOrgs = ["IBM Consulting Portfolio", "IBM Technology", "IBM Consulting Federal", "Global Business Services"];
+
+  const createdDays = randInt(10, 90);
+  const submittedDays = randInt(5, createdDays - 2);
+  const modifiedDays = randInt(1, submittedDays - 1);
+
+  return {
+    title: rand(positions),
+    client: rand(clients),
+    location: rand(locations),
+    id: `SEAT-${randInt(10000, 99999)}`,
+    status: Math.random() > 0.15 ? "Open" : Math.random() > 0.5 ? "Filled" : "On Hold",
+    profsInPlay: profsInPlay,
+    proposed: proposed,
+    selected: selected,
+    notSelected: remaining,
+    positionsNeeded: randInt(1, 4),
+    fulfillmentRisk: rand(["Low", "Medium", "High"]),
+    startDate: new Date(Date.now() + randInt(7, 120) * 24 * 60 * 60 * 1000).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+    endDate: new Date(Date.now() + randInt(180, 720) * 24 * 60 * 60 * 1000).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+    bandLow: randInt(5, 7),
+    bandHigh: randInt(7, 9),
+    clearance: rand(["None", "Public Trust", "Secret", "Top Secret", "TS/SCI"]),
+    remote: randBool(),
+    hoursPerWeek: randBool() ? 40 : randInt(20, 35),
+    service: rand(services),
+    serviceArea: rand(serviceAreas),
+    sector: rand(sectors),
+    // Contacts
+    ownerName: ownerName,
+    ownerEmail: `${firstName.toLowerCase()}.${lastName.toLowerCase()}@ibm.com`,
+    ownerDepartment: `${rand(departments)}/IBM`,
+    delegateOwnerName: delegateName,
+    delegateOwnerEmail: `${delegateFirst.toLowerCase()}.${delegateLast.toLowerCase()}@ibm.com`,
+    delegateOwnerDepartment: `${rand(departments)}/IBM`,
+    projectContactName: projectContactName,
+    projectContactEmail: `${projectContactFirst.toLowerCase()}.${projectContactLast.toLowerCase()}@ibm.com`,
+    projectContactDepartment: `${rand(departments)}/IBM`,
+    opportunityOwnerName: opportunityOwnerName,
+    opportunityOwnerEmail: `${opportunityOwnerFirst.toLowerCase()}.${opportunityOwnerLast.toLowerCase()}@ibm.com`,
+    additionalEditors: Math.random() > 0.5 ? `${rand(firstNames)} ${rand(lastNames)}` : null,
+    // Staffing plan
+    planId: `PLAN-${Math.random().toString(36).substring(2, 8).toUpperCase()}`,
+    planName: `${rand(clients)} - ${rand(positions)} - ${randInt(2025, 2027)}`,
+    laborCategory: rand(laborCategories),
+    fulfillmentOrg: rand(fulfillmentOrgs),
+    update: rand(updates),
+    updateDate: updateDate.toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' }),
+    createdDays: createdDays,
+    submittedDays: submittedDays,
+    modifiedDays: modifiedDays,
+    skills: randSubset(skills, randInt(5, 9)),
+    contractStatus: rand(contractStatuses),
+    clientType: rand(clientTypes),
+    opportunityId: `OPP-${Math.random().toString(36).substring(2, 10).toUpperCase()}`,
+    tracking: rand(["Actively Searching", "Passive Recruiting", "Urgent Fill"]),
+    critSit: randBool(),
+    dynamicDelivery: randBool(),
+    keyRole: randBool()
+  };
+}
+
+// Render all page content
+function renderPage(data) {
+  document.title = `${data.title} — IBM ProM`;
+
+  // Position header
+  document.getElementById('position-title').textContent = data.title;
+  document.getElementById('position-meta').innerHTML = `
+    <span>📍 ${data.location}</span>
+    <span>•</span>
+    <span>🏢 ${data.client}</span>
+    <span>•</span>
+    <span>ID: ${data.id}</span>
+  `;
+
+  // Status bar
+  const statusColor = data.status === "Open" ? "var(--ibm-green)" : data.status === "Filled" ? "var(--ibm-red)" : "var(--ibm-orange)";
+  const riskColor = data.fulfillmentRisk === "Low" ? "green" : data.fulfillmentRisk === "High" ? "red" : "orange";
+
+  document.querySelector('#status-bar > div').innerHTML = `
+    <div>
+      <div style="font-size:12px;font-weight:600;color:var(--text-muted);text-transform:uppercase;margin-bottom:.25rem">Status</div>
+      <div style="display:flex;align-items:center;gap:.5rem">
+        <span style="width:8px;height:8px;background:${statusColor};border-radius:50%;display:inline-block"></span>
+        <span style="font-weight:600;color:${statusColor}">${data.status}</span>
+      </div>
+    </div>
+    <div>
+      <div style="font-size:12px;font-weight:600;color:var(--text-muted);text-transform:uppercase;margin-bottom:.25rem">Professionals in Play</div>
+      <div style="font-weight:600;font-size:1.125rem">${data.profsInPlay} <span style="font-size:14px;color:var(--text-muted);font-weight:400">(P:${data.proposed} S:${data.selected} N:${data.notSelected})</span></div>
+    </div>
+    <div>
+      <div style="font-size:12px;font-weight:600;color:var(--text-muted);text-transform:uppercase;margin-bottom:.25rem">Positions Needed</div>
+      <div style="font-weight:600;font-size:1.125rem">${data.positionsNeeded}</div>
+    </div>
+    <div>
+      <div style="font-size:12px;font-weight:600;color:var(--text-muted);text-transform:uppercase;margin-bottom:.25rem">Fulfillment Risk</div>
+      <div style="display:flex;align-items:center;gap:.5rem">
+        <span class="badge" style="background:var(--ibm-${riskColor}-light);color:var(--ibm-${riskColor})">${data.fulfillmentRisk}</span>
+      </div>
+    </div>
+  `;
+
+  // Latest update
+  const initials = data.ownerName.split(' ').map(n => n[0]).join('');
+  document.getElementById('last-updated').textContent = `Last updated: ${data.updateDate.split(',')[0]}`;
+  document.getElementById('latest-update').innerHTML = `
+    <div style="display:flex;gap:1rem">
+      <div style="width:40px;height:40px;border-radius:50%;background:var(--ibm-blue);color:white;display:flex;align-items:center;justify-content:center;font-weight:600;flex-shrink:0">${initials}</div>
+      <div style="flex:1">
+        <div style="font-weight:600;margin-bottom:.25rem">${data.ownerName}</div>
+        <div style="font-size:12px;color:var(--text-muted);margin-bottom:.5rem">${data.updateDate}</div>
+        <div style="line-height:1.6">${data.update}</div>
+      </div>
+    </div>
+  `;
+
+  // Quick facts
+  document.getElementById('quick-facts').innerHTML = `
+    <div class="detail-row"><label>Start Date</label><span>${data.startDate}</span></div>
+    <div class="detail-row"><label>End Date</label><span>${data.endDate}</span></div>
+    <div class="detail-row"><label>Band</label><span>${data.bandLow} - ${data.bandHigh}</span></div>
+    <div class="detail-row"><label>Security Clearance</label><span>${data.clearance}</span></div>
+    <div class="detail-row"><label>Work Remotely</label><span>${data.remote ? 'Yes' : 'No'}</span></div>
+    <div class="detail-row"><label>Hours per Week</label><span>${data.hoursPerWeek}</span></div>
+  `;
+
+  // Job role
+  document.getElementById('job-role').innerHTML = `<strong>${data.title}</strong>`;
+  document.getElementById('service-area').innerHTML = `
+    <div style="font-weight:600;margin-bottom:.5rem">Service Area</div>
+    <div>${data.service} → ${data.serviceArea}</div>
+  `;
+
+  // Skills
+  document.getElementById('skills-list').innerHTML = data.skills.map(s => `<li>${s}</li>`).join('');
+
+  // Project details
+  document.getElementById('project-details').innerHTML = `
+    <div class="detail-row"><label>Client</label><span>${data.client}</span></div>
+    <div class="detail-row"><label>Contract Status</label><span><span class="badge" style="background:var(--ibm-green-light);color:var(--ibm-green)">${data.contractStatus}</span></span></div>
+    <div class="detail-row"><label>Client Type</label><span>${data.clientType}</span></div>
+    <div class="detail-row"><label>Sector</label><span>${data.sector}</span></div>
+    <div class="detail-row"><label>Service</label><span>${data.service}</span></div>
+  `;
+
+  // Timeline
+  const now = new Date();
+  const created = new Date(now);
+  created.setDate(created.getDate() - data.createdDays);
+  const submitted = new Date(now);
+  submitted.setDate(submitted.getDate() - data.submittedDays);
+  const modified = new Date(now);
+  modified.setDate(modified.getDate() - data.modifiedDays);
+
+  document.getElementById('activity-timeline').innerHTML = `
+    <div class="timeline-item">
+      <div class="timeline-marker"></div>
+      <div class="timeline-content">
+        <div class="timeline-date">${modified.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</div>
+        <div class="timeline-text"><strong>Last Modified:</strong> ${data.update.split('.')[0]}</div>
+      </div>
+    </div>
+    <div class="timeline-item">
+      <div class="timeline-marker"></div>
+      <div class="timeline-content">
+        <div class="timeline-date">${submitted.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</div>
+        <div class="timeline-text"><strong>Submitted</strong> by ${data.ownerName}</div>
+      </div>
+    </div>
+    <div class="timeline-item">
+      <div class="timeline-marker"></div>
+      <div class="timeline-content">
+        <div class="timeline-date">${created.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</div>
+        <div class="timeline-text"><strong>Created</strong> by ${data.ownerName}</div>
+      </div>
+    </div>
+  `;
+
+  // Owner card (opportunity owner)
+  const oppOwnerInitials = data.opportunityOwnerName.split(' ').map(n => n[0]).join('');
+  document.getElementById('owner-card').innerHTML = `
+    <h3 style="font-weight:600;margin-bottom:1rem;font-size:1.125rem">Opportunity Owner</h3>
+    <div style="display:flex;gap:.75rem;align-items:center;margin-bottom:1rem">
+      <div style="width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,var(--ibm-blue),var(--ibm-purple));color:white;display:flex;align-items:center;justify-content:center;font-weight:600;flex-shrink:0">${oppOwnerInitials}</div>
+      <div style="flex:1">
+        <div style="font-weight:600;font-size:14px">${data.opportunityOwnerName}</div>
+        <a href="mailto:${data.opportunityOwnerEmail}" style="color:var(--ibm-blue);text-decoration:none;font-size:13px;word-break:break-all">${data.opportunityOwnerEmail}</a>
+      </div>
+    </div>
+    <button class="btn btn-secondary btn-sm" style="width:100%" onclick="showToast('Email draft opened', 'info')">Contact Owner</button>
+  `;
+
+  // Contacts (all 4 contacts with hover cards and contact buttons)
+  const ownerInitials = data.ownerName.split(' ').map(n => n[0]).join('');
+  const delegateInitials = data.delegateOwnerName.split(' ').map(n => n[0]).join('');
+  const projectInitials = data.projectContactName.split(' ').map(n => n[0]).join('');
+
+  document.getElementById('contacts-list').innerHTML = `
+    <div class="contact-item" style="display:flex;gap:.75rem;align-items:center;padding:.75rem 0;position:relative">
+      <div class="contact-hover-trigger" data-contact='${JSON.stringify({name: data.ownerName, title: "Managing Consultant", division: "Consulting", location: data.location.split(',')[0], email: data.ownerEmail})}'>
+        <div style="width:40px;height:40px;border-radius:50%;background:var(--ibm-teal);color:white;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:14px;flex-shrink:0;cursor:pointer">${ownerInitials}</div>
+      </div>
+      <div style="flex:1">
+        <div style="font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;margin-bottom:.125rem">Owner Name</div>
+        <div style="font-weight:600;font-size:14px;margin-bottom:.125rem">${data.ownerName}</div>
+        <div style="font-size:12px;color:var(--text-muted)">${data.ownerDepartment}</div>
+      </div>
+      <button class="btn btn-secondary btn-sm" onclick="showContactOptions('${data.ownerName}', '${data.ownerEmail}', 'owner')">Contact</button>
+    </div>
+    <div class="contact-item" style="display:flex;gap:.75rem;align-items:center;padding:.75rem 0;position:relative">
+      <div class="contact-hover-trigger" data-contact='${JSON.stringify({name: data.delegateOwnerName, title: "Project Manager", division: "Consulting", location: data.location.split(',')[0], email: data.delegateOwnerEmail})}'>
+        <div style="width:40px;height:40px;border-radius:50%;background:var(--ibm-purple);color:white;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:14px;flex-shrink:0;cursor:pointer">${delegateInitials}</div>
+      </div>
+      <div style="flex:1">
+        <div style="font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;margin-bottom:.125rem">Delegate Name</div>
+        <div style="font-weight:600;font-size:14px;margin-bottom:.125rem">${data.delegateOwnerName}</div>
+        <div style="font-size:12px;color:var(--text-muted)">${data.delegateOwnerDepartment}</div>
+      </div>
+      <button class="btn btn-secondary btn-sm" onclick="showContactOptions('${data.delegateOwnerName}', '${data.delegateOwnerEmail}', 'delegate')">Contact</button>
+    </div>
+    <div class="contact-item" style="display:flex;gap:.75rem;align-items:center;padding:.75rem 0;position:relative">
+      <div class="contact-hover-trigger" data-contact='${JSON.stringify({name: data.projectContactName, title: "Technical Lead", division: "Consulting", location: data.location.split(',')[0], email: data.projectContactEmail})}'>
+        <div style="width:40px;height:40px;border-radius:50%;background:var(--ibm-orange);color:white;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:14px;flex-shrink:0;cursor:pointer">${projectInitials}</div>
+      </div>
+      <div style="flex:1">
+        <div style="font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;margin-bottom:.125rem">Project Contact</div>
+        <div style="font-weight:600;font-size:14px;margin-bottom:.125rem">${data.projectContactName}</div>
+        <div style="font-size:12px;color:var(--text-muted)">${data.projectContactDepartment}</div>
+      </div>
+      <button class="btn btn-primary btn-sm" onclick="draftProjectContactEmail('${data.projectContactName}', '${data.projectContactEmail}', '${data.title}', '${data.id}')">Contact</button>
+    </div>
+    <div style="padding:.75rem 0;border-top:1px solid var(--border-subtle)">
+      <div style="font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;margin-bottom:.5rem">Additional Editors</div>
+      <div style="font-size:14px;color:${data.additionalEditors ? 'var(--text)' : 'var(--text-muted)'}">${data.additionalEditors || 'None assigned'}</div>
+    </div>
+  `;
+
+  // Add hover card functionality
+  setupContactHoverCards();
+
+  // Staffing plan (matching screenshot structure)
+  document.getElementById('staffing-plan').innerHTML = `
+    <div class="detail-row"><label>Plan ID</label><span style="font-family:monospace;font-size:12px">${data.planId}</span></div>
+    <div class="detail-row"><label>Plan Name</label><span>${data.planName}</span></div>
+    <div class="detail-row"><label>Labor Category</label><span>${data.laborCategory}</span></div>
+    <div class="detail-row"><label>Opportunity ID</label><span style="font-family:monospace;font-size:12px">${data.opportunityId}</span></div>
+    <div class="detail-row"><label>Opportunity Name</label><span>${data.title}</span></div>
+    <div style="padding:.75rem 0;border-top:1px solid var(--border-subtle);display:flex;gap:.75rem;align-items:center">
+      <div style="width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,var(--ibm-blue),var(--ibm-purple));color:white;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:14px;flex-shrink:0">${oppOwnerInitials}</div>
+      <div style="flex:1">
+        <div style="font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;margin-bottom:.125rem">Opportunity Owner</div>
+        <div style="font-weight:600;font-size:14px">${data.opportunityOwnerName}</div>
+        <a href="mailto:${data.opportunityOwnerEmail}" style="color:var(--ibm-blue);text-decoration:none;font-size:12px">${data.opportunityOwnerEmail}</a>
+      </div>
+    </div>
+  `;
+
+  // Additional info
+  document.getElementById('additional-info').innerHTML = `
+    <div class="detail-row"><label>Candidate Tracking</label><span>${data.tracking}</span></div>
+    <div class="detail-row"><label>CritSit</label><span>${data.critSit ? 'Yes' : 'No'}</span></div>
+    <div class="detail-row"><label>Key Role</label><span>${data.keyRole ? 'Yes' : 'No'}</span></div>
+    <div class="detail-row"><label>Dynamic Delivery</label><span>${data.dynamicDelivery ? 'Yes' : 'No'}</span></div>
+  `;
+
+  // Show content, hide loading
+  document.getElementById('loading-state').style.display = 'none';
+  document.getElementById('content-container').style.display = 'block';
+}
+
+// Contact hover cards
+function setupContactHoverCards() {
+  const triggers = document.querySelectorAll('.contact-hover-trigger');
+
+  triggers.forEach(trigger => {
+    let hoverCard = null;
+    let hideTimeout = null;
+
+    trigger.addEventListener('mouseenter', (e) => {
+      clearTimeout(hideTimeout);
+      const contactData = JSON.parse(trigger.dataset.contact);
+
+      hoverCard = document.createElement('div');
+      hoverCard.className = 'contact-hover-card';
+      hoverCard.innerHTML = `
+        <div style="font-weight:600;font-size:15px;margin-bottom:.25rem">${contactData.name}</div>
+        <div style="font-size:13px;color:var(--text-muted);margin-bottom:.25rem">${contactData.title}</div>
+        <div style="font-size:12px;color:var(--text-muted);margin-bottom:.5rem">${contactData.division}</div>
+        <div style="font-size:12px;color:var(--text-muted);margin-bottom:.25rem">${contactData.location}</div>
+        <a href="mailto:${contactData.email}" style="color:var(--ibm-blue);text-decoration:none;font-size:13px;display:block">${contactData.email}</a>
+      `;
+
+      document.body.appendChild(hoverCard);
+
+      const rect = trigger.getBoundingClientRect();
+      hoverCard.style.top = `${rect.bottom + 5}px`;
+      hoverCard.style.left = `${rect.left}px`;
+    });
+
+    trigger.addEventListener('mouseleave', () => {
+      hideTimeout = setTimeout(() => {
+        if (hoverCard) {
+          hoverCard.remove();
+          hoverCard = null;
+        }
+      }, 200);
+    });
+  });
+}
+
+// Show contact options modal for owner/delegate
+function showContactOptions(name, email, role) {
+  const modal = document.createElement('div');
+  modal.className = 'contact-modal';
+  modal.innerHTML = `
+    <div class="contact-modal-overlay" onclick="this.parentElement.remove()"></div>
+    <div class="contact-modal-content">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem">
+        <h3 style="font-size:1.25rem;font-weight:600;margin:0">Contact ${name}</h3>
+        <button onclick="this.closest('.contact-modal').remove()" style="background:none;border:none;font-size:24px;cursor:pointer;color:var(--text-muted)">&times;</button>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:.75rem">
+        <button class="btn btn-primary" onclick="openOutlookDraft('${name}', '${email}')">
+          📧 Send Email via Outlook
+        </button>
+        <button class="btn btn-secondary" onclick="openSlackMessage('${name}')">
+          💬 Send Slack Message
+        </button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(modal);
+}
+
+// Open Outlook draft (native integration)
+function openOutlookDraft(name, email) {
+  const subject = encodeURIComponent(`Regarding Position on IBM ProM`);
+  const body = encodeURIComponent(`Hi ${name.split(' ')[0]},\n\nI'm reaching out regarding the position listed on IBM Professional Marketplace.\n\nBest regards`);
+  window.location.href = `mailto:${email}?subject=${subject}&body=${body}`;
+  document.querySelector('.contact-modal')?.remove();
+}
+
+// Open Slack message (native integration)
+function openSlackMessage(name) {
+  // In production, integrate with Slack API
+  showToast(`Opening Slack conversation with ${name}...`, 'info');
+  document.querySelector('.contact-modal')?.remove();
+
+  // Example: window.open(`slack://user?team=TEAM_ID&id=USER_ID`, '_blank');
+}
+
+// Draft project contact email using outreach agent
+async function draftProjectContactEmail(name, email, positionTitle, seatId) {
+  const btn = event.target;
+  const originalText = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = 'Drafting...';
+
+  try {
+    const professionalId = localStorage.getItem('prom_professional_id') || 'PROF-001';
+
+    // Call outreach draft API
+    const res = await fetch('http://127.0.0.1:8000/api/agents/outreach-draft', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        seat_id: seatId,
+        candidate_professional_id: professionalId
+      })
+    });
+
+    if (!res.ok) throw new Error('Failed to draft email');
+
+    const draft = await res.json();
+
+    // Show draft modal with pre-filled content
+    showEmailDraftModal(name, email, draft.subject, draft.body, seatId, professionalId);
+
+  } catch (err) {
+    console.error('Error drafting email:', err);
+    showToast('Failed to draft email', 'error');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = originalText;
+  }
+}
+
+// Show email draft modal
+function showEmailDraftModal(toName, toEmail, subject, body, seatId, professionalId) {
+  const modal = document.createElement('div');
+  modal.className = 'contact-modal';
+  modal.innerHTML = `
+    <div class="contact-modal-overlay" onclick="this.parentElement.remove()"></div>
+    <div class="contact-modal-content" style="max-width:700px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem">
+        <h3 style="font-size:1.25rem;font-weight:600;margin:0">Send Email to ${toName}</h3>
+        <button onclick="this.closest('.contact-modal').remove()" style="background:none;border:none;font-size:24px;cursor:pointer;color:var(--text-muted)">&times;</button>
+      </div>
+
+      <div style="margin-bottom:1rem">
+        <label style="display:block;font-size:13px;font-weight:600;margin-bottom:.5rem">To:</label>
+        <input type="email" id="draft-to-email" value="${toEmail}" style="width:100%;padding:.5rem;border:1px solid var(--border);border-radius:4px" />
+      </div>
+
+      <div style="margin-bottom:1rem">
+        <label style="display:block;font-size:13px;font-weight:600;margin-bottom:.5rem">Subject:</label>
+        <input type="text" id="draft-subject" value="${subject}" style="width:100%;padding:.5rem;border:1px solid var(--border);border-radius:4px" />
+      </div>
+
+      <div style="margin-bottom:1.5rem">
+        <label style="display:block;font-size:13px;font-weight:600;margin-bottom:.5rem">Message:</label>
+        <textarea id="draft-body" rows="10" style="width:100%;padding:.5rem;border:1px solid var(--border);border-radius:4px;font-family:var(--font);resize:vertical">${body}</textarea>
+      </div>
+
+      <div style="display:flex;gap:.75rem;justify-content:flex-end">
+        <button class="btn btn-secondary" onclick="this.closest('.contact-modal').remove()">Cancel</button>
+        <button class="btn btn-primary" onclick="sendDraftEmail('${seatId}', '${professionalId}')">Send Email</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(modal);
+}
+
+// Send the drafted email
+async function sendDraftEmail(seatId, professionalId) {
+  const toEmail = document.getElementById('draft-to-email').value;
+  const subject = document.getElementById('draft-subject').value;
+  const body = document.getElementById('draft-body').value;
+
+  if (!toEmail || !subject || !body) {
+    showToast('Please fill in all fields', 'error');
+    return;
+  }
+
+  const btn = event.target;
+  btn.disabled = true;
+  btn.textContent = 'Sending...';
+
+  try {
+    const res = await fetch('http://127.0.0.1:8000/api/agents/outreach-send', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        seat_id: seatId,
+        candidate_professional_id: professionalId,
+        to_email: toEmail,
+        subject: subject,
+        body: body
+      })
+    });
+
+    if (!res.ok) throw new Error('Failed to send email');
+
+    const result = await res.json();
+
+    if (result.status === 'drafted' || result.status === 'sent') {
+      showToast('Email sent successfully! (Dry run mode)', 'success');
+      document.querySelector('.contact-modal')?.remove();
+    } else {
+      throw new Error(result.detail || 'Failed to send');
+    }
+
+  } catch (err) {
+    console.error('Error sending email:', err);
+    showToast('Failed to send email', 'error');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Send Email';
+  }
+}
+
+// Initialize
+const urlParams = new URLSearchParams(window.location.search);
+const seatId = urlParams.get('id');
+
+async function loadSeatDetails() {
+  if (!seatId) {
+    window.location.href = 'index.html';
+    return;
+  }
+
+  // Simulate loading delay
+  setTimeout(() => {
+    const fakeData = generateFakeData();
+    renderPage(fakeData);
+  }, 800);
+}
+
+// Check auth and load
+const token = localStorage.getItem('prom_token');
+if (!token) {
+  window.location.href = 'login.html';
+} else {
+  const userName = localStorage.getItem('prom_user_name') || 'User';
+  document.getElementById('header-user').textContent = `Hello, ${userName}`;
+  loadSeatDetails();
+}
+</script>
+
+</body>
+</html>

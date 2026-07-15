@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>IBM ProM - Listing Owner Portal</title>
+  <link rel="stylesheet" href="css/prom.css" />
+</head>
+<body>
+
+<!-- ── App Header ─────────────────────────────────────────────────────────── -->
+<header class="app-header">
+  <span class="header-brand">
+    <strong>IBM</strong> Professional Marketplace · Owner Portal
+    <span class="release-tag">ProM R46</span>
+  </span>
+  <div class="header-meta">
+    <span class="header-user" id="header-user">Hello, Owner</span>
+    <a href="index.html">Switch to Candidate View</a>
+    <a href="#">Help / User guide</a>
+    <a href="#" onclick="logout(); return false;" style="color: var(--ibm-red)">Sign out</a>
+  </div>
+</header>
+
+<!-- ── Tab Navigation ─────────────────────────────────────────────────────── -->
+<nav class="tab-nav" role="tablist">
+  <button class="tab-btn active" data-tab="page-my-listings" role="tab">My listings</button>
+  <button class="tab-btn" data-tab="page-create-listing" role="tab">Create listing</button>
+  <button class="tab-btn" data-tab="page-analytics" role="tab">Analytics</button>
+</nav>
+
+<!-- ══════════════════════════════════════════════════════════════════════════
+     PAGE: My Listings
+════════════════════════════════════════════════════════════════════════════ -->
+<main id="page-my-listings" class="page active" role="tabpanel">
+  <h1 class="page-title">My listings</h1>
+  <p class="ibm-confidential">IBM Confidential</p>
+
+  <!-- Agent: Expiration Check -->
+  <div class="card" style="margin-bottom:1.25rem">
+    <div class="card-header">
+      <span class="card-title">🤖 Agent: Listing expiration check</span>
+    </div>
+    <p class="text-sm text-muted" style="margin-bottom:.75rem">
+      Automatically reviews your listings, checks days-since-update, and drafts reconfirmation reminders for listings approaching expiration.
+    </p>
+    <button class="btn btn-primary btn-sm" id="btn-expiration-check" onclick="runExpirationCheck()">
+      Check all my listings for expiration
+    </button>
+    <div id="expiration-output" style="margin-top:.75rem"></div>
+  </div>
+
+  <!-- Agent: Mismatch Detection -->
+  <div class="card" style="margin-bottom:1.25rem">
+    <div class="card-header">
+      <span class="card-title">🤖 Agent: Filled-but-posted mismatch detector</span>
+    </div>
+    <p class="text-sm text-muted" style="margin-bottom:.75rem">
+      Cross-checks listing status against internal signals (e.g., candidates already Selected/Confirmed) and flags the mismatch.
+    </p>
+    <button class="btn btn-primary btn-sm" id="btn-mismatch-check" onclick="runMismatchCheck()">
+      Check for filled-but-posted listings
+    </button>
+    <div id="mismatch-output" style="margin-top:.75rem"></div>
+  </div>
+
+  <!-- Listing Filters -->
+  <div class="filter-row" style="margin-bottom:1rem">
+    <select class="filter-select" id="filter-listing-status" onchange="filterOwnerListings()">
+      <option value="">All listings</option>
+      <option value="active">Active only</option>
+      <option value="expiring">Expiring soon (7 days)</option>
+      <option value="formal">Formality postings</option>
+    </select>
+    <select class="filter-select" id="filter-sort" onchange="filterOwnerListings()">
+      <option value="updated">Last updated</option>
+      <option value="created">Date created</option>
+      <option value="expiration">Days until expiration</option>
+    </select>
+  </div>
+
+  <!-- Listing Cards -->
+  <div id="owner-listings-container">
+    <div class="owner-listing-card">
+      <div class="owner-listing-header">
+        <div>
+          <h3 class="owner-listing-title">Senior Full-Stack Developer</h3>
+          <p class="owner-listing-meta">Citywide Systems Modernization · Remote</p>
+        </div>
+        <span class="badge" style="background:#e3f2fd;color:#1976d2">Active</span>
+      </div>
+
+      <div class="owner-listing-stats">
+        <div class="stat-item">
+          <label>Last updated</label>
+          <span>3 days ago</span>
+        </div>
+        <div class="stat-item">
+          <label>Expires in</label>
+          <span class="text-warning">4 days</span>
+        </div>
+        <div class="stat-item">
+          <label>Profs in play</label>
+          <span>8 (P:5, S:2, N:1)</span>
+        </div>
+        <div class="stat-item">
+          <label>Listing type</label>
+          <span>Actively hiring</span>
+        </div>
+      </div>
+
+      <div class="owner-listing-actions">
+        <button class="btn btn-primary btn-sm" onclick="confirmListing('seat-001')">Confirm still active</button>
+        <button class="btn btn-secondary btn-sm" onclick="editListing('seat-001')">Edit listing</button>
+        <button class="btn btn-ghost btn-sm" onclick="markAsFormal('seat-001')">Mark as formality</button>
+        <button class="btn btn-ghost btn-sm text-danger" onclick="closeListing('seat-001')">Close listing</button>
+      </div>
+
+      <div class="owner-listing-reminder" style="margin-top:.75rem;padding:.75rem;background:#fff3e0;border:1px solid #ffa726;border-radius:4px;font-size:12px">
+        ⚠️ <strong>Action needed:</strong> This listing will expire in 4 days. Click "Confirm still active" to extend visibility for 30 days.
+      </div>
+    </div>
+
+    <div class="owner-listing-card">
+      <div class="owner-listing-header">
+        <div>
+          <h3 class="owner-listing-title">Cloud Integration Engineer</h3>
+          <p class="owner-listing-meta">Northwind Transformation Program · Austin, TX</p>
+        </div>
+        <span class="badge" style="background:#f3e5f5;color:#8e24aa">Formality</span>
+      </div>
+
+      <div class="owner-listing-stats">
+        <div class="stat-item">
+          <label>Last updated</label>
+          <span>12 days ago</span>
+        </div>
+        <div class="stat-item">
+          <label>Status</label>
+          <span>Formality posting</span>
+        </div>
+        <div class="stat-item">
+          <label>Profs in play</label>
+          <span>15 (P:10, S:3, N:2)</span>
+        </div>
+        <div class="stat-item">
+          <label>Listing type</label>
+          <span>Formality/compliance</span>
+        </div>
+      </div>
+
+      <div class="owner-listing-actions">
+        <button class="btn btn-secondary btn-sm" onclick="editListing('seat-002')">Edit listing</button>
+        <button class="btn btn-ghost btn-sm" onclick="markAsReal('seat-002')">Mark as actively hiring</button>
+        <button class="btn btn-ghost btn-sm text-danger" onclick="closeListing('seat-002')">Close listing</button>
+      </div>
+
+      <div class="owner-listing-info" style="margin-top:.75rem;padding:.75rem;background:#f3e5f5;border:1px solid #8e24aa;border-radius:4px;font-size:12px">
+        ℹ️ This listing is visible in the "Formality postings" tab. Candidates can still apply but see accurate expectations.
+      </div>
+    </div>
+
+    <div class="owner-listing-card">
+      <div class="owner-listing-header">
+        <div>
+          <h3 class="owner-listing-title">Application Developer</h3>
+          <p class="owner-listing-meta">Example Digital Services Initiative · Washington</p>
+        </div>
+        <span class="badge" style="background:#ffebee;color:#c62828">Expired</span>
+      </div>
+
+      <div class="owner-listing-stats">
+        <div class="stat-item">
+          <label>Last updated</label>
+          <span>45 days ago</span>
+        </div>
+        <div class="stat-item">
+          <label>Status</label>
+          <span class="text-danger">Expired (not visible)</span>
+        </div>
+        <div class="stat-item">
+          <label>Profs in play</label>
+          <span>3 (P:2, W:1)</span>
+        </div>
+        <div class="stat-item">
+          <label>Listing type</label>
+          <span>—</span>
+        </div>
+      </div>
+
+      <div class="owner-listing-actions">
+        <button class="btn btn-primary btn-sm" onclick="reactivateListing('seat-003')">Reactivate listing</button>
+        <button class="btn btn-secondary btn-sm" onclick="editListing('seat-003')">Edit listing</button>
+        <button class="btn btn-ghost btn-sm text-danger" onclick="deleteListing('seat-003')">Delete listing</button>
+      </div>
+
+      <div class="owner-listing-reminder" style="margin-top:.75rem;padding:.75rem;background:#ffebee;border:1px solid #c62828;border-radius:4px;font-size:12px">
+        🔒 <strong>Listing hidden:</strong> This listing expired 38 days ago and is no longer visible to candidates. Reactivate to make it public again.
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- ══════════════════════════════════════════════════════════════════════════
+     PAGE: Create Listing
+════════════════════════════════════════════════════════════════════════════ -->
+<main id="page-create-listing" class="page" role="tabpanel">
+  <h1 class="page-title">Create new listing</h1>
+  <p class="ibm-confidential">IBM Confidential</p>
+
+  <div class="card" style="max-width:800px">
+    <form id="create-listing-form" onsubmit="createListing(event)">
+
+      <!-- Basic Information -->
+      <div style="margin-bottom:1.5rem">
+        <h3 style="margin-bottom:1rem;font-size:16px;font-weight:600">Basic information</h3>
+
+        <div style="margin-bottom:1rem">
+          <label class="form-label" for="listing-title">Position title *</label>
+          <input type="text" id="listing-title" class="form-input" required placeholder="e.g., Senior Full-Stack Developer" />
+        </div>
+
+        <div style="margin-bottom:1rem">
+          <label class="form-label" for="listing-client">Client name *</label>
+          <input type="text" id="listing-client" class="form-input" required placeholder="e.g., Citywide Systems Modernization" />
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem">
+          <div>
+            <label class="form-label" for="listing-location">Work location *</label>
+            <input type="text" id="listing-location" class="form-input" required placeholder="e.g., Remote" />
+          </div>
+          <div>
+            <label class="form-label" for="listing-remote">Work remotely?</label>
+            <select id="listing-remote" class="form-input">
+              <option value="true">Yes</option>
+              <option value="false">No</option>
+            </select>
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem">
+          <div>
+            <label class="form-label" for="listing-band-low">Band low *</label>
+            <input type="text" id="listing-band-low" class="form-input" required placeholder="e.g., 6" />
+          </div>
+          <div>
+            <label class="form-label" for="listing-band-high">Band high *</label>
+            <input type="text" id="listing-band-high" class="form-input" required placeholder="e.g., 7" />
+          </div>
+        </div>
+      </div>
+
+      <!-- Listing Type Selection -->
+      <div style="margin-bottom:1.5rem">
+        <h3 style="margin-bottom:1rem;font-size:16px;font-weight:600">Listing type *</h3>
+        <p class="text-muted text-sm" style="margin-bottom:.75rem">
+          Be transparent about whether this is a real opening or a formality posting.
+        </p>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
+          <label class="listing-type-option" style="padding:1rem;border:2px solid var(--border);border-radius:6px;cursor:pointer">
+            <input type="radio" name="listing-type" value="real" checked style="margin-right:.5rem" />
+            <div>
+              <strong style="display:block;margin-bottom:.25rem">Actively hiring</strong>
+              <span class="text-sm text-muted">This is a real opening and I'm actively hiring externally</span>
+            </div>
+          </label>
+
+          <label class="listing-type-option" style="padding:1rem;border:2px solid var(--border);border-radius:6px;cursor:pointer">
+            <input type="radio" name="listing-type" value="formal" style="margin-right:.5rem" />
+            <div>
+              <strong style="display:block;margin-bottom:.25rem">Formality/compliance posting</strong>
+              <span class="text-sm text-muted">This is posted for compliance but not actively hiring</span>
+            </div>
+          </label>
+        </div>
+      </div>
+
+      <!-- Additional Details -->
+      <div style="margin-bottom:1.5rem">
+        <h3 style="margin-bottom:1rem;font-size:16px;font-weight:600">Additional details</h3>
+
+        <div style="margin-bottom:1rem">
+          <label class="form-label" for="listing-sector">Sector</label>
+          <input type="text" id="listing-sector" class="form-input" placeholder="e.g., Financial Services" />
+        </div>
+
+        <div style="margin-bottom:1rem">
+          <label class="form-label" for="listing-clearance">Clearance needed</label>
+          <input type="text" id="listing-clearance" class="form-input" placeholder="e.g., Secret, Top Secret, None" />
+        </div>
+
+        <div style="margin-bottom:1rem">
+          <label class="form-label" for="listing-start-date">Start date</label>
+          <input type="date" id="listing-start-date" class="form-input" />
+        </div>
+      </div>
+
+      <!-- Form Actions -->
+      <div style="display:flex;gap:.75rem;padding-top:1rem;border-top:1px solid var(--border)">
+        <button type="submit" class="btn btn-primary">Create listing</button>
+        <button type="button" class="btn btn-secondary" onclick="document.getElementById('create-listing-form').reset()">Reset form</button>
+      </div>
+    </form>
+  </div>
+</main>
+
+<!-- ══════════════════════════════════════════════════════════════════════════
+     PAGE: Analytics
+════════════════════════════════════════════════════════════════════════════ -->
+<main id="page-analytics" class="page" role="tabpanel">
+  <h1 class="page-title">Analytics</h1>
+  <p class="ibm-confidential">IBM Confidential</p>
+
+  <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(250px, 1fr));gap:1rem;margin-bottom:1.5rem">
+    <div class="card">
+      <h3 style="font-size:14px;color:var(--text-muted);margin-bottom:.5rem">Active listings</h3>
+      <p style="font-size:32px;font-weight:600;color:var(--ibm-blue)">12</p>
+    </div>
+    <div class="card">
+      <h3 style="font-size:14px;color:var(--text-muted);margin-bottom:.5rem">Expiring soon (7 days)</h3>
+      <p style="font-size:32px;font-weight:600;color:var(--ibm-orange)">3</p>
+    </div>
+    <div class="card">
+      <h3 style="font-size:14px;color:var(--text-muted);margin-bottom:.5rem">Formality postings</h3>
+      <p style="font-size:32px;font-weight:600;color:var(--text-muted)">2</p>
+    </div>
+    <div class="card">
+      <h3 style="font-size:14px;color:var(--text-muted);margin-bottom:.5rem">Total candidates in play</h3>
+      <p style="font-size:32px;font-weight:600;color:var(--ibm-green)">47</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2 style="margin-bottom:1rem">Listing health overview</h2>
+    <p class="text-muted text-sm">Track how well you're maintaining your listings and responding to candidate interest.</p>
+
+    <div style="margin-top:1.5rem">
+      <table class="seats-table">
+        <thead>
+          <tr>
+            <th>Listing title</th>
+            <th>Days since update</th>
+            <th>Profs in play</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Senior Full-Stack Developer</td>
+            <td>3 days</td>
+            <td>8</td>
+            <td><span class="badge" style="background:#fff3e0;color:#f57c00">Expiring soon</span></td>
+            <td><button class="btn btn-primary btn-sm">Confirm</button></td>
+          </tr>
+          <tr>
+            <td>Cloud Integration Engineer</td>
+            <td>12 days</td>
+            <td>15</td>
+            <td><span class="badge" style="background:#f3e5f5;color:#8e24aa">Formality</span></td>
+            <td><button class="btn btn-secondary btn-sm">Edit</button></td>
+          </tr>
+          <tr>
+            <td>Application Developer</td>
+            <td>45 days</td>
+            <td>3</td>
+            <td><span class="badge" style="background:#ffebee;color:#c62828">Expired</span></td>
+            <td><button class="btn btn-primary btn-sm">Reactivate</button></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</main>
+
+<!-- ── Toast container ────────────────────────────────────────────────────── -->
+<div id="toast-container" class="toast-container" aria-live="polite"></div>
+
+<script src="js/prom.js"></script>
+<script src="js/owner.js"></script>
+</body>
+</html>

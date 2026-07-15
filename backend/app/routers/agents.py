@@ -1,4 +1,5 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
+from typing import List
 from app.models.agent import (
     StaleCheckRequest, StaleCheckResult,
     MismatchCheckRequest, MismatchCheckResult,
@@ -6,12 +7,17 @@ from app.models.agent import (
     OutreachSendRequest, OutreachSendResult,
     RecommendationRequest, RecommendationResult,
     CVTailorRequest, CVTailorResult,
+    AgentResponse,
 )
+from app.models.seat import Seat
 from app.agents.stale_agent import run_stale_check
 from app.agents.mismatch_agent import run_mismatch_check
 from app.agents.outreach_agent import run_outreach_draft, run_outreach_send
 from app.agents.recommendation_agent import run_recommendations
 from app.agents.cv_tailor_agent import run_cv_tailor
+from app.agents.expiration_agent import check_listing_expiration
+from app.models.auth import User
+from app.services.auth_service import get_current_user
 
 router = APIRouter()
 
@@ -48,3 +54,15 @@ async def recommendations(request: RecommendationRequest):
 @router.post("/cv-tailor", response_model=CVTailorResult)
 async def cv_tailor(request: CVTailorRequest):
     return await run_cv_tailor(request)
+
+
+# ── Agent #9: Expiration Check ─────────────────────────────────────────────────
+@router.post("/expiration-check", response_model=AgentResponse)
+def expiration_check(
+    seats: List[Seat],
+    threshold_days: int = 7
+):
+    """
+    Check which listings are approaching expiration
+    """
+    return check_listing_expiration(seats, threshold_days)

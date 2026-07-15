@@ -470,3 +470,8 @@ def search_seats(params: SeatSearchParams) -> SeatListResponse:
 
 def get_seat_by_id(seat_id: str) -> Optional[Seat]:
     return next((s for s in _SEATS if s.seat_id == seat_id), None)
+
+
+def get_all_seats() -> list[Seat]:
+    """Get all seats (for owner portal filtering)"""
+    return _SEATS

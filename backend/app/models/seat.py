@@ -51,6 +51,10 @@ class Seat(BaseModel):
     is_available: bool = True
     mismatch_flag: bool = False
     ai_recommendation_note: Optional[str] = None
+    last_confirmed_date: Optional[datetime] = None
+    expiration_date: Optional[datetime] = None
+    days_until_expiration: Optional[int] = None
+    is_expired: bool = False
 
 
 class SeatSearchParams(BaseModel):

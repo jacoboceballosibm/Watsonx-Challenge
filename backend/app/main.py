@@ -2,7 +2,7 @@ import logging
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.routers import profile, seats, agents, auth
+from app.routers import profile, seats, agents, auth, owner
 
 logging.basicConfig(
     level=logging.INFO,
@@ -29,6 +29,7 @@ app.include_router(auth.router, prefix="/api/auth", tags=["Authentication"])
 app.include_router(profile.router, prefix="/api/profile", tags=["Profile"])
 app.include_router(seats.router, prefix="/api/seats", tags=["Seats"])
 app.include_router(agents.router, prefix="/api/agents", tags=["Agents"])
+app.include_router(owner.router, prefix="/api/owner", tags=["Owner Portal"])
 
 
 @app.get("/api/health")

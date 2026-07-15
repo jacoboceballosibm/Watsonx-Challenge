@@ -5,7 +5,7 @@ In production, use proper password hashing (bcrypt), JWT tokens, and secure sess
 from typing import Optional
 import secrets
 import os
-from app.models.auth import User, LoginResponse
+from app.models.auth import User, LoginResponse, UserRole
 
 # Demo password from environment or default for development only
 DEMO_PASSWORD = os.getenv("DEMO_PASSWORD", "password")
@@ -15,27 +15,37 @@ _USERS: dict[str, User] = {
     "anguyen": User(
         username="anguyen",
         password=DEMO_PASSWORD,
-        professional_id="A5XCVSPCNN2O"
+        professional_id="A5XCVSPCNN2O",
+        user_id="A5XCVSPCNN2O",
+        role=UserRole.CANDIDATE
     ),
     "jsmith": User(
         username="jsmith",
         password=DEMO_PASSWORD,
-        professional_id="JS7BQM3PXWK1"
+        professional_id="JS7BQM3PXWK1",
+        user_id="JS7BQM3PXWK1",
+        role=UserRole.CANDIDATE
     ),
     "mchen": User(
         username="mchen",
         password=DEMO_PASSWORD,
-        professional_id="MC2NVD9RTPW5"
+        professional_id="MC2NVD9RTPW5",
+        user_id="MC2NVD9RTPW5",
+        role=UserRole.OWNER
     ),
     "swilliams": User(
         username="swilliams",
         password=DEMO_PASSWORD,
-        professional_id="SW8FHK4TQNX7"
+        professional_id="SW8FHK4TQNX7",
+        user_id="SW8FHK4TQNX7",
+        role=UserRole.OWNER
     ),
     "drodriguez": User(
         username="drodriguez",
         password=DEMO_PASSWORD,
-        professional_id="DR3KGP6LMZY8"
+        professional_id="DR3KGP6LMZY8",
+        user_id="DR3KGP6LMZY8",
+        role=UserRole.OWNER
     ),
 }
 
@@ -63,8 +73,10 @@ def authenticate(username: str, password: str) -> Optional[LoginResponse]:
 
     return LoginResponse(
         professional_id=user.professional_id,
+        user_id=user.user_id,
         name=name,
-        token=token
+        token=token,
+        role=user.role
     )
 
 
@@ -79,3 +91,17 @@ def logout(token: str) -> bool:
         del _SESSIONS[token]
         return True
     return False
+
+
+def get_current_user(token: str) -> Optional[User]:
+    """Get current user from token."""
+    professional_id = verify_token(token)
+    if not professional_id:
+        return None
+
+    # Find user by professional_id
+    for user in _USERS.values():
+        if user.professional_id == professional_id:
+            return user
+
+    return None

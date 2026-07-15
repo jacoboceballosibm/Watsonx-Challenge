@@ -83,3 +83,11 @@ class CVTailorResult(BaseModel):
     seat_id: str
     tailored_cv_text: str
     changes_summary: list[str]
+
+
+# ── Agent #9: Expiration check agent ──────────────────────────────────────────
+class AgentResponse(BaseModel):
+    agent_name: str
+    summary: str
+    data: dict
+    success: bool
