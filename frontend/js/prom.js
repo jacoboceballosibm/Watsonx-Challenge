@@ -5,7 +5,21 @@
  */
 
 const API = "http://127.0.0.1:8000/api";
-const CURRENT_USER_ID = "A5XCVSPCNN2O"; // Replace with session-based ID
+
+// Get current user from session
+function getCurrentUserId() {
+  return localStorage.getItem("prom_user_id") || null;
+}
+
+function getCurrentUserName() {
+  return localStorage.getItem("prom_user_name") || "User";
+}
+
+function getAuthToken() {
+  return localStorage.getItem("prom_token") || null;
+}
+
+const CURRENT_USER_ID = getCurrentUserId();
 
 // ── Toasts ────────────────────────────────────────────────────────────────────
 function showToast(message, type = "info", duration = 4000) {
@@ -32,6 +46,31 @@ async function apiPost(path, body) {
   });
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   return res.json();
+}
+
+// ── Authentication ────────────────────────────────────────────────────────────
+function checkAuth() {
+  if (!CURRENT_USER_ID || !getAuthToken()) {
+    window.location.href = "login.html";
+    return false;
+  }
+  return true;
+}
+
+function logout() {
+  localStorage.removeItem("prom_token");
+  localStorage.removeItem("prom_user_id");
+  localStorage.removeItem("prom_user_name");
+  window.location.href = "login.html";
+}
+
+function updateUserDisplay() {
+  const userName = getCurrentUserName();
+  const headerUser = document.getElementById("header-user");
+  if (headerUser) {
+    const firstName = userName.split("/")[0].split(" ")[0];
+    headerUser.textContent = `Hello, ${firstName}`;
+  }
 }
 
 // ── Tab Navigation ────────────────────────────────────────────────────────────
@@ -269,7 +308,7 @@ let currentQuery = "";
 async function loadSeats(page = 1, perPage = 30, query = "") {
   const tableBody = document.getElementById("seats-table-body");
   const resultsMeta = document.getElementById("results-meta");
-  tableBody.innerHTML = '<tr><td colspan="8" style="padding:2rem;text-align:center"><span class="spinner"></span></td></tr>';
+  tableBody.innerHTML = '<tr><td colspan="12" style="padding:2rem;text-align:center"><span class="spinner"></span></td></tr>';
 
   try {
     const params = new URLSearchParams({ page, per_page: perPage });
@@ -291,12 +330,26 @@ async function loadSeats(page = 1, perPage = 30, query = "") {
 
     tableBody.innerHTML = data.seats.map(renderSeatRow).join("");
   } catch (err) {
-    tableBody.innerHTML = `<tr><td colspan="8" style="color:var(--ibm-red);padding:1rem">Could not load seats — ${err.message}</td></tr>`;
+    tableBody.innerHTML = `<tr><td colspan="12" style="color:var(--ibm-red);padding:1rem">Could not load seats — ${err.message}</td></tr>`;
   }
 }
 
 function renderSeatRow(seat) {
-  const rowClass = seat.is_stale ? 'stale-row' : '';
+  // Priority order for row highlighting:
+  // 1. Stale (highest priority - warning)
+  // 2. Applied (user already applied)
+  // 3. Not available (position filled/closed)
+  // 4. Available (open for applications)
+  let rowClass = '';
+  if (seat.is_stale) {
+    rowClass = 'stale-row';
+  } else if (seat.has_applied) {
+    rowClass = 'applied-row';
+  } else if (!seat.is_available) {
+    rowClass = 'unavailable-row';
+  } else if (seat.is_available && !seat.has_applied && !seat.is_stale) {
+    rowClass = 'available-row';
+  }
 
   // Build status breakdown display like: 9 ( P 4 S 5 )
   let profsDisplay = seat.profs_in_play.toString();
@@ -319,16 +372,29 @@ function renderSeatRow(seat) {
     }
   }
 
+  // Format start date
+  const startDate = seat.start_date ? new Date(seat.start_date).toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric'
+  }) : '—';
+
+  // Format clearance
+  const clearance = seat.clearance_needed || 'None';
+
   return `
     <tr class="${rowClass}" data-seat-id="${seat.seat_id}">
       <td><input type="checkbox" class="seat-checkbox" value="${seat.seat_id}" /></td>
-      <td><a href="#" onclick="expandSeatDetails('${seat.seat_id}'); return false;">${seat.client_name}</a></td>
-      <td>${seat.title}</td>
+      <td><a href="#" onclick="expandSeatDetails('${seat.seat_id}'); return false;">${seat.title}</a></td>
+      <td>${seat.client_name}</td>
+      <td style="text-align:center;font-weight:600;">${seat.positions_still_needed}</td>
       <td class="profs-in-play-cell">${profsDisplay}</td>
+      <td style="white-space:nowrap;">${startDate}</td>
+      <td>${clearance}</td>
       <td>${seat.owner_notes_id}</td>
       <td>${seat.service}</td>
-      <td>${seat.requested_band_high}</td>
-      <td>${seat.requested_band_low}</td>
+      <td style="text-align:center;">${seat.requested_band_high}</td>
+      <td style="text-align:center;">${seat.requested_band_low}</td>
       <td>${seat.contract_owning_country}</td>
     </tr>`;
 }
@@ -583,6 +649,13 @@ function applyFilters() {
 // Init
 // ══════════════════════════════════════════════════════════════════════════════
 document.addEventListener("DOMContentLoaded", () => {
+  // Check authentication first
+  if (!checkAuth()) {
+    return;
+  }
+
+  updateUserDisplay();
+
   initTabs();
   initCollapse();
   initCVBuilderNav();

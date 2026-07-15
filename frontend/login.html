@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sign In — IBM Professional Marketplace</title>
+  <link rel="stylesheet" href="css/prom.css" />
+  <style>
+    body {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #161616 0%, #262626 100%);
+    }
+
+    .login-container {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 2.5rem;
+      width: 100%;
+      max-width: 480px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    }
+
+    .login-header {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+    .login-header h1 {
+      font-size: 1.5rem;
+      font-weight: 500;
+      margin: 0 0 0.5rem 0;
+      color: var(--text-primary);
+    }
+
+    .login-header .ibm-brand {
+      font-weight: 700;
+      color: var(--ibm-blue);
+    }
+
+    .login-header .subtitle {
+      color: var(--text-muted);
+      font-size: 0.875rem;
+    }
+
+    .form-group {
+      margin-bottom: 1.5rem;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 0.875rem;
+      font-weight: 500;
+      margin-bottom: 0.5rem;
+      color: var(--text-primary);
+    }
+
+    .form-group input,
+    .form-group select {
+      width: 100%;
+      padding: 0.75rem;
+      font-size: 0.875rem;
+      border: 1px solid var(--border);
+      border-radius: 2px;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      font-family: 'IBM Plex Sans', sans-serif;
+    }
+
+    .form-group input:focus,
+    .form-group select:focus {
+      outline: 2px solid var(--ibm-blue);
+      outline-offset: 2px;
+    }
+
+    .login-btn {
+      width: 100%;
+      padding: 0.875rem;
+      font-size: 0.875rem;
+      font-weight: 500;
+      background: var(--ibm-blue);
+      color: white;
+      border: none;
+      border-radius: 2px;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .login-btn:hover:not(:disabled) {
+      background: var(--ibm-blue-hover);
+    }
+
+    .login-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .demo-users {
+      margin-top: 2rem;
+      padding-top: 2rem;
+      border-top: 1px solid var(--border);
+    }
+
+    .demo-users h3 {
+      font-size: 0.875rem;
+      font-weight: 600;
+      margin-bottom: 1rem;
+      color: var(--text-primary);
+    }
+
+    .user-card {
+      background: var(--bg-primary);
+      border: 1px solid var(--border);
+      border-radius: 2px;
+      padding: 0.875rem;
+      margin-bottom: 0.75rem;
+      cursor: pointer;
+      transition: all 0.15s;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .user-card:hover {
+      border-color: var(--ibm-blue);
+      background: var(--bg-secondary);
+    }
+
+    .user-card-info {
+      flex: 1;
+    }
+
+    .user-card-name {
+      font-weight: 600;
+      font-size: 0.875rem;
+      color: var(--text-primary);
+      margin-bottom: 0.25rem;
+    }
+
+    .user-card-meta {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+
+    .error-message {
+      background: var(--ibm-red-light);
+      color: var(--ibm-red);
+      padding: 0.75rem;
+      border-radius: 2px;
+      font-size: 0.875rem;
+      margin-bottom: 1rem;
+      display: none;
+    }
+
+    .error-message.visible {
+      display: block;
+    }
+
+    .info-box {
+      background: rgba(78, 159, 255, 0.1);
+      border: 1px solid rgba(78, 159, 255, 0.3);
+      padding: 0.875rem;
+      border-radius: 2px;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-top: 1.5rem;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="login-container">
+    <div class="login-header">
+      <h1><span class="ibm-brand">IBM</span> Professional Marketplace</h1>
+      <p class="subtitle">ProM+ Modernized · WatsonX Challenge Demo</p>
+    </div>
+
+    <div id="error-message" class="error-message"></div>
+
+    <form id="login-form">
+      <div class="form-group">
+        <label for="username">Username</label>
+        <input
+          type="text"
+          id="username"
+          name="username"
+          placeholder="Enter your username"
+          required
+          autocomplete="username"
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="password">Password</label>
+        <input
+          type="password"
+          id="password"
+          name="password"
+          placeholder="Enter your password"
+          required
+          autocomplete="current-password"
+        />
+      </div>
+
+      <button type="submit" class="login-btn" id="login-btn">
+        Sign In
+      </button>
+    </form>
+
+    <div class="demo-users">
+      <h3>Demo Users (Click to sign in)</h3>
+      <div id="demo-users-list">
+        <div style="text-align:center;padding:1rem;color:var(--text-muted);font-size:0.875rem">
+          Loading demo users...
+        </div>
+      </div>
+    </div>
+
+    <div class="info-box" id="password-info">
+      All demo accounts use the same password (loading...)
+    </div>
+  </div>
+
+  <script>
+    const API = "http://127.0.0.1:8000/api";
+
+    let demoPassword = "password"; // default
+
+    // Load demo users
+    async function loadDemoUsers() {
+      try {
+        const res = await fetch(`${API}/auth/users`);
+        const data = await res.json();
+
+        // Store the demo password
+        demoPassword = data.default_password || "password";
+
+        // Update password info box
+        const infoBox = document.getElementById("password-info");
+        if (infoBox) {
+          infoBox.innerHTML = `All demo accounts use password: <strong>${demoPassword}</strong>`;
+        }
+
+        const container = document.getElementById("demo-users-list");
+        container.innerHTML = data.users
+          .map(
+            (user) => `
+          <div class="user-card" onclick="selectUser('${user.username}')">
+            <div class="user-card-info">
+              <div class="user-card-name">${user.name}</div>
+              <div class="user-card-meta">@${user.username} · Band ${user.band} · ${user.location}</div>
+            </div>
+            <div style="color:var(--ibm-blue);font-size:0.75rem">→</div>
+          </div>
+        `
+          )
+          .join("");
+      } catch (err) {
+        console.error("Failed to load demo users:", err);
+      }
+    }
+
+    // Select a demo user
+    function selectUser(username) {
+      document.getElementById("username").value = username;
+      document.getElementById("password").value = demoPassword;
+      document.getElementById("login-form").requestSubmit();
+    }
+
+    // Show error message
+    function showError(message) {
+      const errorDiv = document.getElementById("error-message");
+      errorDiv.textContent = message;
+      errorDiv.classList.add("visible");
+      setTimeout(() => errorDiv.classList.remove("visible"), 5000);
+    }
+
+    // Handle login
+    document.getElementById("login-form").addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const username = document.getElementById("username").value.trim();
+      const password = document.getElementById("password").value;
+      const btn = document.getElementById("login-btn");
+
+      if (!username || !password) {
+        showError("Please enter both username and password");
+        return;
+      }
+
+      btn.disabled = true;
+      btn.textContent = "Signing in...";
+
+      try {
+        const res = await fetch(`${API}/auth/login`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ username, password }),
+        });
+
+        if (!res.ok) {
+          throw new Error("Invalid username or password");
+        }
+
+        const data = await res.json();
+
+        // Store session info
+        localStorage.setItem("prom_token", data.token);
+        localStorage.setItem("prom_user_id", data.professional_id);
+        localStorage.setItem("prom_user_name", data.name);
+
+        // Redirect to main app
+        window.location.href = "index.html";
+      } catch (err) {
+        showError(err.message);
+        btn.disabled = false;
+        btn.textContent = "Sign In";
+      }
+    });
+
+    // Check if already logged in
+    if (localStorage.getItem("prom_token")) {
+      window.location.href = "index.html";
+    }
+
+    // Initialize
+    loadDemoUsers();
+  </script>
+</body>
+</html>

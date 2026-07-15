@@ -62,10 +62,21 @@ npm run build
 
 ### 3. Frontend
 
-Open `frontend/index.html` directly in a browser, or serve with:
+Serve the frontend with:
 ```bash
 cd frontend && python -m http.server 3000
 ```
+
+Then open http://127.0.0.1:3000/login.html in your browser.
+
+**Sign-In Demo**: The app includes 5 demo users showcasing different profiles:
+- All accounts use the same password (set via `DEMO_PASSWORD` env var, defaults to "password")
+- Click any user card on the login page to auto-sign in
+- Each user has unique skills, band, location, and availability date
+
+Demo users: `anguyen`, `jsmith`, `mchen`, `swilliams`, `drodriguez`
+
+See [AUTHENTICATION.md](AUTHENTICATION.md) for complete details.
 
 ## Wiring the AI agents
 

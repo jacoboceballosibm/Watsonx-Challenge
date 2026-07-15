@@ -42,8 +42,13 @@ class Seat(BaseModel):
     candidate_status: Optional[CandidateStatus] = None
     profs_in_play: int = 0
     status_breakdown: Optional[StatusBreakdown] = None
+    positions_still_needed: int = 1
+    start_date: Optional[date] = None
+    clearance_needed: Optional[str] = None
     seat_type: SeatType = SeatType.REAL
     is_stale: bool = False
+    has_applied: bool = False
+    is_available: bool = True
     mismatch_flag: bool = False
     ai_recommendation_note: Optional[str] = None
 

@@ -947,18 +947,49 @@ h3 { font-size: 1rem; font-weight: 600; }
 .seats-table tbody tr {
   border-bottom: 1px solid var(--border-subtle);
   transition: background-color var(--transition);
+  background: var(--bg); /* Explicitly set white background - no zebra striping */
 }
 
 .seats-table tbody tr:hover {
   background: var(--surface-hover);
 }
 
+/* Highlight available positions (open and ready to apply) */
+.seats-table tbody tr.available-row {
+  background: #e8f5e9 !important;
+  border-left: 3px solid var(--ibm-green);
+}
+
+.seats-table tbody tr.available-row:hover {
+  background: #d4edd6 !important;
+}
+
+/* Highlight rows for positions already applied to */
+.seats-table tbody tr.applied-row {
+  background: #faf9f7 !important;
+}
+
+.seats-table tbody tr.applied-row:hover {
+  background: #f0eeec !important;
+}
+
+/* Stale rows - takes precedence over available/applied */
 .seats-table tbody tr.stale-row {
-  background: var(--ibm-orange-light);
+  background: var(--ibm-orange-light) !important;
+  border-left: 3px solid var(--ibm-orange);
 }
 
 .seats-table tbody tr.stale-row:hover {
-  background: #ffe8d6;
+  background: #ffe8d6 !important;
+}
+
+/* Not available (position filled or closed) */
+.seats-table tbody tr.unavailable-row {
+  background: var(--ibm-red-light) !important;
+}
+
+.seats-table tbody tr.unavailable-row:hover {
+  background: #ffe5e5 !important;
 }
 
 .seats-table td {
@@ -974,6 +1005,37 @@ h3 { font-size: 1rem; font-weight: 600; }
 
 .seats-table td a:hover {
   text-decoration: underline;
+}
+
+/* Column-specific styling */
+.seats-table th:nth-child(1),
+.seats-table td:nth-child(1) {
+  width: 40px;
+  text-align: center;
+}
+
+.seats-table th:nth-child(4),
+.seats-table td:nth-child(4) {
+  width: 100px;
+  text-align: center;
+}
+
+.seats-table th:nth-child(6),
+.seats-table td:nth-child(6) {
+  width: 110px;
+}
+
+.seats-table th:nth-child(7),
+.seats-table td:nth-child(7) {
+  width: 120px;
+}
+
+.seats-table th:nth-child(10),
+.seats-table td:nth-child(10),
+.seats-table th:nth-child(11),
+.seats-table td:nth-child(11) {
+  width: 80px;
+  text-align: center;
 }
 
 .seats-table .badge {

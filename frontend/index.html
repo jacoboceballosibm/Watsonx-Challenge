@@ -15,9 +15,10 @@
     <span class="release-tag">ProM R46</span>
   </span>
   <div class="header-meta">
-    <span class="header-user">Hello, John Smith</span>
+    <span class="header-user" id="header-user">Hello, User</span>
     <a href="#">Feedback</a>
     <a href="#">Help / User guide</a>
+    <a href="#" onclick="logout(); return false;" style="color: var(--ibm-red)">Sign out</a>
   </div>
 </header>
 
@@ -314,13 +315,22 @@
     <span></span>
   </div>
 
-  <!-- Candidate status legend -->
-  <div class="flex-row" style="margin-bottom:.75rem;font-size:12px;color:var(--text-muted)">
-    Candidate status:
-    <span class="badge badge-P">P</span> Proposed &nbsp;
-    <span class="badge badge-S">S</span> Selected &nbsp;
-    <span class="badge badge-N">N</span> Not Selected &nbsp;
-    <span class="badge badge-W">W</span> Withdrawn
+  <!-- Legend -->
+  <div style="display:flex;gap:2rem;margin-bottom:.75rem;font-size:12px;color:var(--text-muted);flex-wrap:wrap;">
+    <div>
+      <strong>Candidate status:</strong>
+      <span class="badge badge-P">P</span> Proposed &nbsp;
+      <span class="badge badge-S">S</span> Selected &nbsp;
+      <span class="badge badge-N">N</span> Not Selected &nbsp;
+      <span class="badge badge-W">W</span> Withdrawn
+    </div>
+    <div>
+      <strong>Row highlighting:</strong>
+      <span style="display:inline-block;width:16px;height:16px;background:var(--ibm-orange-light);border:1px solid var(--ibm-orange);vertical-align:middle;margin:0 4px;"></span> Stale listing (needs follow-up) &nbsp;
+      <span style="display:inline-block;width:16px;height:16px;background:#faf9f7;border:1px solid var(--border);vertical-align:middle;margin:0 4px;"></span> Already applied &nbsp;
+      <span style="display:inline-block;width:16px;height:16px;background:var(--ibm-red-light);border:1px solid var(--ibm-red);vertical-align:middle;margin:0 4px;"></span> Position filled &nbsp;
+      <span style="display:inline-block;width:16px;height:16px;background:#e8f5e9;border:1px solid var(--ibm-green);vertical-align:middle;margin:0 4px;"></span> Available now
+    </div>
   </div>
 
   <!-- Seat table view -->
@@ -337,19 +347,22 @@
         <thead>
           <tr>
             <th><input type="checkbox" id="select-all-seats" onclick="toggleSelectAll()" /></th>
-            <th>Client name</th>
             <th>Title</th>
+            <th>Client name</th>
+            <th>Positions needed</th>
             <th>Profs in play</th>
+            <th>Start date</th>
+            <th>Clearance</th>
             <th>Owner notes ID</th>
             <th>Service</th>
-            <th>Requested band high</th>
-            <th>Requested band low</th>
-            <th>Contract owning country</th>
+            <th>Band high</th>
+            <th>Band low</th>
+            <th>Country</th>
           </tr>
         </thead>
         <tbody id="seats-table-body">
           <tr>
-            <td colspan="9" style="padding:2rem;text-align:center;color:var(--text-muted)">
+            <td colspan="12" style="padding:2rem;text-align:center;color:var(--text-muted)">
               Click "Find an open seat" tab to load listings.
             </td>
           </tr>
