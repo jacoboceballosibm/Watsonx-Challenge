@@ -36,9 +36,28 @@ class OutreachDraftRequest(BaseModel):
 
 
 class OutreachDraftResult(BaseModel):
+    seat_id: str
+    candidate_professional_id: str
+    to_email: Optional[str] = None
+    to_display_name: Optional[str] = None
     subject: str
     body: str
     # Frontend presents this for user edit before sending via Outlook
+
+
+class OutreachSendRequest(BaseModel):
+    seat_id: str
+    candidate_professional_id: str
+    to_email: str
+    subject: str
+    body: str
+
+
+class OutreachSendResult(BaseModel):
+    status: str
+    provider: str = "outlook"
+    message_id: Optional[str] = None
+    detail: Optional[str] = None
 
 
 # ── Agent #7: AI project recommendations ─────────────────────────────────────

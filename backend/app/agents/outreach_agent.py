@@ -8,7 +8,13 @@ the user then sends it via their Outlook integration.
 """
 from __future__ import annotations
 import logging
-from app.models.agent import OutreachDraftRequest, OutreachDraftResult
+from app.models.agent import (
+    OutreachDraftRequest,
+    OutreachDraftResult,
+    OutreachSendRequest,
+    OutreachSendResult,
+)
+from app.services.outlook_service import send_outlook_email
 from app.services.seat_service import get_seat_by_id
 from app.services.profile_service import get_profile
 
@@ -43,4 +49,20 @@ async def run_outreach_draft(request: OutreachDraftRequest) -> OutreachDraftResu
         request.candidate_professional_id,
     )
 
-    return OutreachDraftResult(subject=subject, body=body)
+    return OutreachDraftResult(
+        seat_id=request.seat_id,
+        candidate_professional_id=request.candidate_professional_id,
+        to_email=None,
+        to_display_name=seat.owner_notes_id if seat else None,
+        subject=subject,
+        body=body,
+    )
+
+
+async def run_outreach_send(request: OutreachSendRequest) -> OutreachSendResult:
+    logger.info(
+        '{"agent": "outreach_send", "seat_id": "%s", "candidate_id": "%s"}',
+        request.seat_id,
+        request.candidate_professional_id,
+    )
+    return await send_outlook_email(request)

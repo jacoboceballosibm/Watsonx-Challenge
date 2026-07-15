@@ -3,12 +3,13 @@ from app.models.agent import (
     StaleCheckRequest, StaleCheckResult,
     MismatchCheckRequest, MismatchCheckResult,
     OutreachDraftRequest, OutreachDraftResult,
+    OutreachSendRequest, OutreachSendResult,
     RecommendationRequest, RecommendationResult,
     CVTailorRequest, CVTailorResult,
 )
 from app.agents.stale_agent import run_stale_check
 from app.agents.mismatch_agent import run_mismatch_check
-from app.agents.outreach_agent import run_outreach_draft
+from app.agents.outreach_agent import run_outreach_draft, run_outreach_send
 from app.agents.recommendation_agent import run_recommendations
 from app.agents.cv_tailor_agent import run_cv_tailor
 
@@ -31,6 +32,10 @@ async def mismatch_check(request: MismatchCheckRequest):
 @router.post("/outreach-draft", response_model=OutreachDraftResult)
 async def outreach_draft(request: OutreachDraftRequest):
     return await run_outreach_draft(request)
+
+@router.post("/outreach-send", response_model=OutreachSendResult)
+async def outreach_send(request: OutreachSendRequest):
+    return await run_outreach_send(request)
 
 
 # ── Agent #7 ──────────────────────────────────────────────────────────────────
