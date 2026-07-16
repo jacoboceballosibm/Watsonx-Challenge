@@ -392,11 +392,74 @@
         <div>
           <span class="card-title">CV Builder</span>
           <p class="cv-workbench-subtitle">Edit, review, and publish your CV directly in ProM without leaving the site.</p>
+          <div class="cv-active-meta">
+            <span id="active-cv-name">Base CV</span>
+            <span id="active-cv-target">No target role</span>
+          </div>
         </div>
         <div class="cv-editor-actions">
           <button class="btn btn-secondary btn-sm" type="button" onclick="enhanceCVSummary()">Enhance with AI</button>
           <button class="btn btn-primary btn-sm" type="button" onclick="saveCVEdits()">Save CV</button>
         </div>
+      </div>
+
+      <div class="card cv-agent-workspace-card">
+        <div class="cv-agent-grid">
+          <div>
+            <div class="card-header">
+              <span class="card-title">CV Agent Workspace</span>
+            </div>
+            <label class="cv-field-label" for="cv-role-input">Target role description</label>
+            <textarea id="cv-role-input" class="cv-agent-textarea" placeholder="Paste the role, project description, or seat notes here."></textarea>
+            <div class="cv-agent-controls">
+              <label class="cv-field-label" for="cv-source-select">Source CV</label>
+              <select id="cv-source-select" class="filter-select">
+                <option value="active">Active repository CV</option>
+                <option value="paste">Paste source CV text</option>
+              </select>
+            </div>
+            <textarea id="cv-source-text" class="cv-agent-textarea is-hidden" placeholder="Paste an existing CV here when you want the agent to tailor from raw text."></textarea>
+            <div class="cv-agent-actions">
+              <button class="btn btn-primary btn-sm" type="button" onclick="runCVAgentPreview()">Tailor CV</button>
+              <button class="btn btn-secondary btn-sm" type="button" onclick="clearCVAgentWorkspace()">Clear</button>
+            </div>
+          </div>
+          <div id="cv-agent-output" class="cv-agent-output">
+            <span class="text-muted text-sm">Agent drafts, change summaries, and role-fit notes will appear here.</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="card cv-preview-card">
+        <div class="cv-preview-header">
+          <div>
+            <span class="card-title">Resume preview</span>
+          </div>
+          <div class="cv-editor-actions">
+            <button class="btn btn-secondary btn-sm" id="resume-preview-toggle" type="button" aria-expanded="true" onclick="toggleResumePreview()">Minimize</button>
+            <button class="btn btn-secondary btn-sm" type="button" onclick="renderResumePreview()">Refresh preview</button>
+            <button class="btn btn-secondary btn-sm" type="button" onclick="window.print()">Print</button>
+          </div>
+        </div>
+        <article class="resume-preview-paper" id="resume-preview-paper">
+          <header class="resume-preview-header-block">
+            <h2 id="resume-preview-name">John Smith</h2>
+            <p id="resume-preview-title">Senior Developer</p>
+            <div id="resume-preview-contact" class="resume-preview-contact"></div>
+          </header>
+
+          <section class="resume-preview-section">
+            <h3>Overview</h3>
+            <p id="resume-preview-overview"></p>
+          </section>
+
+          <section class="resume-preview-section">
+            <h3>Key skills</h3>
+            <ul id="resume-preview-skills" class="resume-preview-skills"></ul>
+          </section>
+
+          <div id="resume-preview-sections"></div>
+        </article>
       </div>
 
       <div class="cv-builder-scroll-area card" style="margin-top:1rem">
@@ -412,10 +475,10 @@
             <button class="btn btn-ghost btn-sm cv-action-btn" type="button" data-section-label="Contact information">Edit</button>
           </div>
           <div class="cv-contact-block cv-editable-content">
-            <strong>John Smith</strong>
-            <span>Senior Developer</span>
-            <span>(555) 010-1234</span>
-            <span>john.smith@example.com</span>
+            <strong id="cv-contact-name">John Smith</strong>
+            <span id="cv-contact-title">Senior Developer</span>
+            <span id="cv-contact-phone">(555) 010-1234</span>
+            <span id="cv-contact-email">john.smith@example.com</span>
           </div>
         </section>
 
@@ -430,12 +493,14 @@
           <label class="cv-field-label" for="cv-editor">Overview</label>
           <textarea id="cv-editor" class="cv-editor-textarea">John Smith is a software developer with experience delivering modern web applications, API integrations, and cloud-ready solutions for enterprise teams.</textarea>
           <div class="cv-detail-group cv-editable-content">
-            <label class="cv-field-label">Key skills</label>
-            <ul class="cv-bullet-list">
-              <li>Programming Languages: JavaScript, TypeScript, Java</li>
-              <li>Frameworks: React, Node.js, Express</li>
-              <li>Cloud &amp; DevOps: Docker, CI/CD, Kubernetes</li>
-            </ul>
+            <label class="cv-field-label" for="cv-skills-editor">Key skills</label>
+            <textarea id="cv-skills-editor" class="cv-editor-textarea" rows="5">JavaScript
+TypeScript
+Java
+React
+Node.js
+Docker
+Kubernetes</textarea>
           </div>
           <div class="cv-detail-group cv-editable-content">
             <label class="cv-field-label">Digital credentials</label>
@@ -455,7 +520,7 @@
             </div>
             <button class="btn btn-ghost btn-sm cv-action-btn" type="button" data-section-label="Work experience">Edit</button>
           </div>
-          <div class="cv-entry-card cv-editable-content">
+          <div class="cv-entry-card cv-editable-content" data-cv-section-key="work_experience">
             <h3>Senior Developer</h3>
             <p class="cv-entry-meta">Northwind Digital · Austin, TX</p>
             <p class="cv-entry-meta">Jan 2023 – Present</p>
@@ -471,7 +536,7 @@
             </div>
             <button class="btn btn-ghost btn-sm cv-action-btn" type="button" data-section-label="IBM assignment history">Edit</button>
           </div>
-          <div class="cv-entry-card cv-editable-content">
+          <div class="cv-entry-card cv-editable-content" data-cv-section-key="ibm_assignment_history">
             <h3>Platform Modernization Support</h3>
             <p class="cv-entry-meta">Example Federal Agency · Mar 2025 – Sep 2025</p>
             <ul class="cv-bullet-list">
@@ -489,7 +554,7 @@
             </div>
             <button class="btn btn-secondary btn-sm cv-action-btn" type="button" data-section-label="Additional client history">Add</button>
           </div>
-          <p class="text-muted cv-empty-state">No client history added yet.</p>
+          <div class="text-muted cv-empty-state" data-cv-section-key="additional_client_history">No client history added yet.</div>
         </section>
 
         <section id="cv-industry-experience" class="cv-builder-section">
@@ -500,7 +565,7 @@
             </div>
             <button class="btn btn-ghost btn-sm cv-action-btn" type="button" data-section-label="Industry experience">Edit</button>
           </div>
-          <div class="cv-entry-card compact cv-editable-content">
+          <div class="cv-entry-card compact cv-editable-content" data-cv-section-key="industry_experience">
             <p><strong>Financial Services</strong></p>
             <p class="cv-entry-meta">Proficiency: Intermediate</p>
           </div>
@@ -514,7 +579,7 @@
             </div>
             <button class="btn btn-ghost btn-sm cv-action-btn" type="button" data-section-label="Education">Edit</button>
           </div>
-          <div class="cv-entry-card compact cv-editable-content">
+          <div class="cv-entry-card compact cv-editable-content" data-cv-section-key="education">
             <p><strong>B.S. in Computer Science</strong></p>
             <p class="cv-entry-meta">Example State University, 2022</p>
           </div>
@@ -528,7 +593,7 @@
             </div>
             <button class="btn btn-ghost btn-sm cv-action-btn" type="button" data-section-label="Languages">Edit</button>
           </div>
-          <div class="cv-entry-card compact cv-editable-content">
+          <div class="cv-entry-card compact cv-editable-content" data-cv-section-key="languages">
             <p><strong>English</strong></p>
             <p class="cv-entry-meta">Spoken proficiency: Fluent</p>
             <p class="cv-entry-meta">Written proficiency: Fluent</p>
@@ -543,7 +608,7 @@
             </div>
             <button class="btn btn-secondary btn-sm cv-action-btn" type="button" data-section-label="Publications">Add</button>
           </div>
-          <p class="text-muted cv-empty-state">No publications added yet.</p>
+          <div class="text-muted cv-empty-state" data-cv-section-key="publications">No publications added yet.</div>
         </section>
 
         <section id="cv-memberships" class="cv-builder-section">
@@ -554,7 +619,7 @@
             </div>
             <button class="btn btn-secondary btn-sm cv-action-btn" type="button" data-section-label="Memberships">Add</button>
           </div>
-          <p class="text-muted cv-empty-state">No memberships added yet.</p>
+          <div class="text-muted cv-empty-state" data-cv-section-key="memberships">No memberships added yet.</div>
         </section>
 
         <section id="cv-additional-information" class="cv-builder-section">
@@ -565,7 +630,7 @@
             </div>
             <button class="btn btn-ghost btn-sm cv-action-btn" type="button" data-section-label="Additional information">Edit</button>
           </div>
-          <div class="cv-entry-card cv-editable-content">
+          <div class="cv-entry-card cv-editable-content" data-cv-section-key="additional_information">
             <h3>Enterprise Portal Refresh</h3>
             <p class="cv-entry-meta">Technical contributor · 2026</p>
             <ul class="cv-bullet-list">
@@ -579,6 +644,13 @@
     </section>
 
     <aside class="cv-builder-sidebar card">
+      <div class="cv-repository-panel">
+        <div class="cv-builder-sidebar-title">CV repository</div>
+        <div id="cv-repository-list" class="cv-repository-list">
+          <span class="text-muted text-sm">Loading saved CVs...</span>
+        </div>
+        <button class="btn btn-secondary btn-sm cv-repository-action" type="button" onclick="duplicateActiveCV()">Duplicate active CV</button>
+      </div>
       <div class="cv-builder-sidebar-title">CV sections</div>
       <button class="cv-nav-item active" type="button" data-cv-target="cv-contact-information">Contact information</button>
       <button class="cv-nav-item" type="button" data-cv-target="cv-overview-and-key-skills">Overview and key skills</button>
@@ -639,6 +711,6 @@
 <!-- ── Toast container ────────────────────────────────────────────────────── -->
 <div id="toast-container" class="toast-container" aria-live="polite"></div>
 
-<script src="js/prom.js"></script>
+<script src="js/prom.js?v=20260716-preview-minimize"></script>
 </body>
 </html>

@@ -21,6 +21,26 @@ function getAuthToken() {
 
 const CURRENT_USER_ID = getCurrentUserId();
 
+const CV_STATE = {
+  activeCvId: null,
+  activeCv: null,
+  repository: [],
+  agentDraft: null,
+  isTailoring: false,
+};
+
+const RESUME_SECTION_LABELS = {
+  work_experience: "Work experience",
+  ibm_assignment_history: "IBM assignment history",
+  additional_client_history: "Additional client history",
+  industry_experience: "Industry experience",
+  education: "Education",
+  languages: "Languages",
+  publications: "Publications",
+  memberships: "Memberships",
+  additional_information: "Additional information",
+};
+
 // ── Toasts ────────────────────────────────────────────────────────────────────
 function showToast(message, type = "info", duration = 4000) {
   const container = document.getElementById("toast-container");
@@ -32,9 +52,21 @@ function showToast(message, type = "info", duration = 4000) {
 }
 
 // ── Fetch helpers ─────────────────────────────────────────────────────────────
+async function parseApiError(res) {
+  try {
+    const body = await res.json();
+    const detail = Array.isArray(body.detail)
+      ? body.detail.map((item) => item.msg || JSON.stringify(item)).join("; ")
+      : body.detail;
+    return detail || `HTTP ${res.status}`;
+  } catch {
+    return `HTTP ${res.status}`;
+  }
+}
+
 async function apiGet(path) {
   const res = await fetch(`${API}${path}`);
-  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  if (!res.ok) throw new Error(await parseApiError(res));
   return res.json();
 }
 
@@ -44,7 +76,17 @@ async function apiPost(path, body) {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
   });
-  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  if (!res.ok) throw new Error(await parseApiError(res));
+  return res.json();
+}
+
+async function apiPatch(path, body) {
+  const res = await fetch(`${API}${path}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) throw new Error(await parseApiError(res));
   return res.json();
 }
 
@@ -184,6 +226,446 @@ function initSeatCards() {
 // ══════════════════════════════════════════════════════════════════════════════
 // PAGE: My Profile
 // ══════════════════════════════════════════════════════════════════════════════
+function defaultContactFromProfile(profile) {
+  const displayName = profile.name?.split("/")?.[0] || profile.name || "";
+  return {
+    name: displayName,
+    title: profile.band ? `IBM Band ${profile.band} Professional` : "IBM Professional",
+    phone: "",
+    email: profile.w3_link || "",
+    ...(profile.cv_contact || {}),
+  };
+}
+
+function renderCVContact(profile) {
+  const contact = defaultContactFromProfile(profile);
+  const contactBlock = document.querySelector("#cv-contact-information .cv-contact-block");
+  if (!contactBlock) return;
+
+  const inlineEditor = document.querySelector("#cv-contact-information .cv-inline-editor");
+  if (inlineEditor) inlineEditor.remove();
+  contactBlock.hidden = false;
+
+  document.getElementById("cv-contact-name").textContent = contact.name || "";
+  document.getElementById("cv-contact-title").textContent = contact.title || "";
+  document.getElementById("cv-contact-phone").textContent = contact.phone || "";
+  document.getElementById("cv-contact-email").textContent = contact.email || "";
+}
+
+function collectCVContact() {
+  const inlineEditor = document.querySelector("#cv-contact-information .cv-inline-editor");
+  const lines = inlineEditor
+    ? inlineEditor.value.split(/\r?\n/)
+    : [
+        document.getElementById("cv-contact-name")?.textContent,
+        document.getElementById("cv-contact-title")?.textContent,
+        document.getElementById("cv-contact-phone")?.textContent,
+        document.getElementById("cv-contact-email")?.textContent,
+      ];
+
+  const clean = lines.map((line) => (line || "").trim()).filter(Boolean);
+  return {
+    name: clean[0] || "",
+    title: clean[1] || "",
+    phone: clean[2] || "",
+    email: clean[3] || "",
+  };
+}
+
+function textToLines(text) {
+  return (text || "")
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean);
+}
+
+function escapeHTML(value) {
+  return (value || "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
+function renderPlainCVContent(content, text, emptyText) {
+  const lines = textToLines(text);
+  content.replaceChildren();
+
+  if (!lines.length) {
+    content.textContent = emptyText;
+    content.classList.add("text-muted", "cv-empty-state");
+    content.hidden = false;
+    return;
+  }
+
+  content.classList.remove("text-muted", "cv-empty-state");
+  lines.forEach((line, index) => {
+    const element = document.createElement(index === 0 ? "h3" : "p");
+    if (index === 1) element.className = "cv-entry-meta";
+    element.textContent = line;
+    content.appendChild(element);
+  });
+  content.hidden = false;
+}
+
+function renderCVSections(profile) {
+  const sections = profile.cv_sections || {};
+  document.querySelectorAll("[data-cv-section-key]").forEach((content) => {
+    const key = content.dataset.cvSectionKey;
+    const section = content.closest(".cv-builder-section");
+    const inlineEditor = section?.querySelector(".cv-inline-editor");
+    if (inlineEditor) inlineEditor.remove();
+
+    const fallback = content.dataset.emptyText || content.textContent.trim();
+    content.dataset.emptyText = fallback;
+    renderPlainCVContent(content, sections[key] || "", fallback);
+  });
+}
+
+function collectCVSections() {
+  const sections = {};
+  document.querySelectorAll("[data-cv-section-key]").forEach((content) => {
+    const key = content.dataset.cvSectionKey;
+    const section = content.closest(".cv-builder-section");
+    const inlineEditor = section?.querySelector(".cv-inline-editor");
+    const value = inlineEditor
+      ? inlineEditor.value.trim()
+      : content.innerText.replace(/\n{2,}/g, "\n").trim();
+
+    const emptyText = content.dataset.emptyText || "";
+    sections[key] = value === emptyText ? "" : value;
+  });
+  return sections;
+}
+
+function collectCurrentCVPayload() {
+  const editor = document.getElementById("cv-editor");
+  const skillsEditor = document.getElementById("cv-skills-editor");
+  const skills = skillsEditor
+    ? skillsEditor.value
+        .split(/\r?\n|,/)
+        .map((skill) => skill.trim())
+        .filter(Boolean)
+    : [];
+
+  return {
+    cv_contact: collectCVContact(),
+    cv_overview: editor?.value.trim() || "",
+    skills,
+    cv_sections: collectCVSections(),
+  };
+}
+
+function appendText(parent, tagName, text, className) {
+  if (!text) return null;
+  const element = document.createElement(tagName);
+  if (className) element.className = className;
+  element.textContent = text;
+  parent.appendChild(element);
+  return element;
+}
+
+function previewDataFromCurrentEditor() {
+  const payload = collectCurrentCVPayload();
+  return {
+    name: CV_STATE.activeCv?.name || "Current CV",
+    target_role: CV_STATE.activeCv?.target_role || null,
+    ...payload,
+  };
+}
+
+function renderResumeSection(container, title, text) {
+  if (!text?.trim()) return;
+  const section = document.createElement("section");
+  section.className = "resume-preview-section";
+  appendText(section, "h3", title);
+
+  const lines = textToLines(text);
+  const entry = document.createElement("div");
+  entry.className = "resume-preview-entry";
+  appendText(entry, "p", lines[0] || text, "resume-preview-entry-title");
+  if (lines[1]) appendText(entry, "p", lines[1], "resume-preview-entry-meta");
+  if (lines.length > 2) {
+    appendText(entry, "p", lines.slice(2).join("\n"), "resume-preview-entry-body");
+  }
+  section.appendChild(entry);
+  container.appendChild(section);
+}
+
+function renderResumePreview(cv = null) {
+  const data = cv || previewDataFromCurrentEditor();
+  const contact = data.cv_contact || {};
+  const name = contact.name || data.name || "Resume";
+
+  document.getElementById("resume-preview-name").textContent = name;
+  document.getElementById("resume-preview-title").textContent =
+    contact.title || data.target_role || "";
+
+  const contactContainer = document.getElementById("resume-preview-contact");
+  contactContainer.replaceChildren();
+  [contact.phone, contact.email].filter(Boolean).forEach((item) => {
+    appendText(contactContainer, "span", item);
+  });
+
+  document.getElementById("resume-preview-overview").textContent =
+    data.cv_overview || "";
+
+  const skillsList = document.getElementById("resume-preview-skills");
+  skillsList.replaceChildren();
+  (data.skills || []).forEach((skill) => appendText(skillsList, "li", skill));
+
+  const sectionsContainer = document.getElementById("resume-preview-sections");
+  sectionsContainer.replaceChildren();
+  Object.entries(RESUME_SECTION_LABELS).forEach(([key, label]) => {
+    renderResumeSection(sectionsContainer, label, data.cv_sections?.[key] || "");
+  });
+}
+
+function toggleResumePreview() {
+  const card = document.querySelector(".cv-preview-card");
+  const button = document.getElementById("resume-preview-toggle");
+  if (!card || !button) return;
+
+  const isMinimized = card.classList.toggle("is-minimized");
+  button.textContent = isMinimized ? "Expand" : "Minimize";
+  button.setAttribute("aria-expanded", String(!isMinimized));
+}
+
+function renderActiveCVMeta(cv) {
+  document.getElementById("active-cv-name").textContent = cv?.name || "Unsaved CV";
+  document.getElementById("active-cv-target").textContent = cv?.target_role || "No target role";
+}
+
+function renderCVDocument(cv) {
+  CV_STATE.activeCvId = cv.cv_id;
+  CV_STATE.activeCv = cv;
+
+  const cvEditor = document.getElementById("cv-editor");
+  if (cvEditor) cvEditor.value = cv.cv_overview || "";
+
+  const skillsEditor = document.getElementById("cv-skills-editor");
+  if (skillsEditor) skillsEditor.value = cv.skills?.join("\n") || "";
+
+  renderCVContact({
+    name: cv.cv_contact?.name || cv.name,
+    cv_contact: cv.cv_contact,
+  });
+  renderCVSections({ cv_sections: cv.cv_sections || {} });
+  renderActiveCVMeta(cv);
+  renderResumePreview(cv);
+}
+
+function renderCVRepository() {
+  const list = document.getElementById("cv-repository-list");
+  if (!list) return;
+
+  if (!CV_STATE.repository.length) {
+    list.innerHTML = "<span class='text-muted text-sm'>No saved CVs yet.</span>";
+    renderActiveCVMeta(null);
+    return;
+  }
+
+  list.innerHTML = "";
+  CV_STATE.repository.forEach((cv) => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = `cv-repository-item ${cv.cv_id === CV_STATE.activeCvId ? "active" : ""}`;
+    button.dataset.cvId = cv.cv_id;
+
+    const name = document.createElement("strong");
+    name.textContent = cv.name;
+    const meta = document.createElement("span");
+    meta.textContent = cv.target_role || (cv.is_default ? "Default CV" : "General CV");
+
+    button.append(name, meta);
+    button.addEventListener("click", () => selectCV(cv.cv_id));
+    list.appendChild(button);
+  });
+}
+
+async function loadCVRepository() {
+  if (!CURRENT_USER_ID) return;
+  try {
+    const response = await apiGet(`/cvs?professional_id=${encodeURIComponent(CURRENT_USER_ID)}`);
+    CV_STATE.repository = response.cvs || [];
+    const active = CV_STATE.repository.find((cv) => cv.is_default) || CV_STATE.repository[0];
+    if (active) renderCVDocument(active);
+    renderCVRepository();
+  } catch (err) {
+    document.getElementById("cv-repository-list").innerHTML =
+      "<span class='text-muted text-sm'>Could not load CV repository.</span>";
+  }
+}
+
+function selectCV(cvId) {
+  const cv = CV_STATE.repository.find((item) => item.cv_id === cvId);
+  if (!cv) return;
+  renderCVDocument(cv);
+  renderCVRepository();
+  showToast(`Opened ${cv.name}`, "info");
+}
+
+async function saveActiveCVDocument() {
+  if (!CV_STATE.activeCvId) return null;
+  const payload = collectCurrentCVPayload();
+  const cv = await apiPatch(`/cvs/${CV_STATE.activeCvId}`, payload);
+  CV_STATE.activeCv = cv;
+  CV_STATE.repository = CV_STATE.repository.map((item) =>
+    item.cv_id === cv.cv_id ? cv : item
+  );
+  renderCVRepository();
+  renderActiveCVMeta(cv);
+  return cv;
+}
+
+async function duplicateActiveCV() {
+  if (!CV_STATE.activeCvId) {
+    showToast("Open a CV before duplicating it", "info");
+    return;
+  }
+
+  try {
+    const copy = await apiPost(`/cvs/${CV_STATE.activeCvId}/duplicate`, {
+      name: `${CV_STATE.activeCv?.name || "CV"} Copy`,
+    });
+    CV_STATE.repository = [copy, ...CV_STATE.repository];
+    renderCVDocument(copy);
+    renderCVRepository();
+    showToast("CV duplicated", "success");
+  } catch (err) {
+    showToast("Could not duplicate CV: " + err.message, "error");
+  }
+}
+
+function initCVAgentWorkspace() {
+  const sourceSelect = document.getElementById("cv-source-select");
+  const sourceText = document.getElementById("cv-source-text");
+  if (!sourceSelect || !sourceText) return;
+
+  sourceSelect.addEventListener("change", () => {
+    sourceText.classList.toggle("is-hidden", sourceSelect.value !== "paste");
+  });
+}
+
+function clearCVAgentWorkspace() {
+  document.getElementById("cv-role-input").value = "";
+  document.getElementById("cv-source-text").value = "";
+  document.getElementById("cv-agent-output").innerHTML =
+    "<span class='text-muted text-sm'>Agent drafts, change summaries, and role-fit notes will appear here.</span>";
+  CV_STATE.agentDraft = null;
+}
+
+function renderAgentList(title, items) {
+  if (!items?.length) return "";
+  return `<h3>${escapeHTML(title)}</h3><ul>${items.map((item) => `<li>${escapeHTML(item)}</li>`).join("")}</ul>`;
+}
+
+function cvDocumentFromAgentDraft(draft, name) {
+  const roleDescription = document.getElementById("cv-role-input")?.value.trim() || "";
+  const fallbackName = roleDescription
+    ? `${roleDescription.split(/\r?\n/)[0].slice(0, 64)} CV`
+    : "Tailored CV";
+
+  return {
+    professional_id: CURRENT_USER_ID,
+    name: name || fallbackName,
+    target_role: roleDescription || null,
+    source_type: "agent",
+    tags: ["tailored"],
+    cv_contact: draft.tailored_cv_contact || collectCVContact(),
+    cv_overview: draft.tailored_cv_overview || "",
+    skills: draft.tailored_skills || [],
+    cv_sections: draft.tailored_cv_sections || {},
+    is_default: false,
+  };
+}
+
+function applyAgentDraftToCurrentCV() {
+  const draft = CV_STATE.agentDraft;
+  if (!draft) {
+    showToast("Run the CV agent before applying a draft", "info");
+    return;
+  }
+
+  const previewCv = {
+    cv_id: CV_STATE.activeCvId || "agent-preview",
+    name: CV_STATE.activeCv?.name || "Agent Preview",
+    target_role: document.getElementById("cv-role-input")?.value.trim() || null,
+    cv_contact: draft.tailored_cv_contact || {},
+    cv_overview: draft.tailored_cv_overview || "",
+    skills: draft.tailored_skills || [],
+    cv_sections: draft.tailored_cv_sections || {},
+  };
+
+  renderCVDocument(previewCv);
+  renderResumePreview(previewCv);
+  showToast("Agent draft applied to the editor. Save CV to persist it.", "success");
+}
+
+async function saveAgentDraftAsNewCV() {
+  const draft = CV_STATE.agentDraft;
+  if (!draft) {
+    showToast("Run the CV agent before saving a tailored CV", "info");
+    return;
+  }
+
+  try {
+    const created = await apiPost("/cvs", cvDocumentFromAgentDraft(draft));
+    CV_STATE.repository = [created, ...CV_STATE.repository];
+    renderCVDocument(created);
+    renderCVRepository();
+    showToast("Tailored CV saved to repository", "success");
+  } catch (err) {
+    showToast("Could not save tailored CV: " + err.message, "error");
+  }
+}
+
+async function runCVAgentPreview() {
+  const roleInput = document.getElementById("cv-role-input");
+  const sourceSelect = document.getElementById("cv-source-select");
+  const sourceText = document.getElementById("cv-source-text");
+  const output = document.getElementById("cv-agent-output");
+  const roleDescription = roleInput.value.trim();
+
+  if (!roleDescription) {
+    showToast("Paste a target role before tailoring", "info");
+    return;
+  }
+
+  CV_STATE.isTailoring = true;
+  output.innerHTML = "<span class='spinner'></span> Tailoring CV...";
+
+  try {
+    const result = await apiPost("/agents/cv-tailor", {
+      professional_id: CURRENT_USER_ID,
+      cv_id: sourceSelect.value === "active" ? CV_STATE.activeCvId : null,
+      role_description: roleDescription,
+      source_cv_text: sourceSelect.value === "paste" ? sourceText.value.trim() : null,
+      output_mode: "preview",
+    });
+
+    CV_STATE.agentDraft = result;
+    output.innerHTML = `
+      ${renderAgentList("Changes", result.changes_summary)}
+      ${renderAgentList("Role alignment", result.role_alignment)}
+      ${renderAgentList("Gaps to review", result.missing_experience)}
+      ${renderAgentList("Suggested keywords", result.suggested_keywords)}
+      ${renderAgentList("Warnings", result.warnings)}
+      <div class="cv-agent-actions">
+        <button class="btn btn-primary btn-sm" type="button" onclick="applyAgentDraftToCurrentCV()">Apply to current CV</button>
+        <button class="btn btn-secondary btn-sm" type="button" onclick="saveAgentDraftAsNewCV()">Save as new CV</button>
+      </div>
+      <div class="cv-agent-preview">${escapeHTML(result.tailored_cv_text)}</div>
+    `;
+    showToast("Tailored CV draft ready", "success");
+  } catch (err) {
+    output.innerHTML = `<span style="color:var(--ibm-red)">CV tailor failed: ${err.message}</span>`;
+  } finally {
+    CV_STATE.isTailoring = false;
+  }
+}
+
 async function loadProfile() {
   try {
     const profile = await apiGet(`/profile/${CURRENT_USER_ID}`);
@@ -194,6 +676,25 @@ async function loadProfile() {
     document.getElementById("prof-location").textContent = profile.location || "—";
     document.getElementById("prof-skills").textContent =
       profile.skills?.join(", ") || "—";
+    const cvEditor = document.getElementById("cv-editor");
+    if (cvEditor) {
+      cvEditor.value = profile.cv_overview || "";
+    }
+
+    const skillsEditor = document.getElementById("cv-skills-editor");
+    if (skillsEditor) {
+      skillsEditor.value = profile.skills?.join("\n") || "";
+    }
+    renderCVContact(profile);
+    renderCVSections(profile);
+    renderResumePreview({
+      name: profile.name,
+      target_role: null,
+      cv_contact: profile.cv_contact || {},
+      cv_overview: profile.cv_overview || "",
+      skills: profile.skills || [],
+      cv_sections: profile.cv_sections || {},
+    });
   } catch {
     showToast("Could not load profile — backend may be offline", "error");
   }
@@ -556,9 +1057,42 @@ function focusCVEditor() {
   editor.scrollIntoView({ behavior: "smooth", block: "center" });
 }
 
-function saveCVEdits() {
-  updateCVTimestamp();
-  showToast("CV changes saved in ProM", "success");
+async function saveCVEdits() {
+  const editor = document.getElementById("cv-editor");
+  if (!editor || !CURRENT_USER_ID) return;
+
+  const cvPayload = collectCurrentCVPayload();
+
+  try {
+    const profile = await apiPatch(`/profile/${CURRENT_USER_ID}`, {
+      cv_overview: cvPayload.cv_overview,
+      cv_contact: cvPayload.cv_contact,
+      cv_sections: cvPayload.cv_sections,
+      skills: cvPayload.skills,
+    });
+
+    const activeCv = await saveActiveCVDocument();
+    document.getElementById("prof-skills").textContent =
+      profile.skills?.join(", ") || "â€”";
+    renderCVContact(profile);
+    renderCVSections(profile);
+    if (activeCv) {
+      renderCVDocument(activeCv);
+    } else {
+      renderResumePreview({
+        name: profile.name,
+        target_role: null,
+        cv_contact: profile.cv_contact || {},
+        cv_overview: profile.cv_overview || "",
+        skills: profile.skills || [],
+        cv_sections: profile.cv_sections || {},
+      });
+    }
+    updateCVTimestamp();
+    showToast("CV changes saved in ProM", "success");
+  } catch (err) {
+    showToast("Could not save CV changes: " + err.message, "error");
+  }
 }
 
 function enhanceCVSummary() {
@@ -657,10 +1191,12 @@ document.addEventListener("DOMContentLoaded", () => {
   initCollapse();
   initCVBuilderNav();
   initCVActionButtons();
+  initCVAgentWorkspace();
   initSeatCards();
 
   // Load profile data
   loadProfile();
+  loadCVRepository();
   loadRecommendations();
 
   // Load seats when Find tab is activated

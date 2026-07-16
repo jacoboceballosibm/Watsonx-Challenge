@@ -1,7 +1,7 @@
 from __future__ import annotations
 from enum import Enum
 from typing import Optional
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 # ── Agent #1: Stale listing reconfirmation ────────────────────────────────────
@@ -75,14 +75,28 @@ class RecommendationResult(BaseModel):
 
 # ── Agent #8: AI CV tailor ────────────────────────────────────────────────────
 class CVTailorRequest(BaseModel):
-    seat_id: str
     professional_id: str
+    seat_id: Optional[str] = None
+    cv_id: Optional[str] = None
+    role_description: Optional[str] = None
+    source_cv_text: Optional[str] = None
+    output_mode: str = "preview"
 
 
 class CVTailorResult(BaseModel):
-    seat_id: str
+    seat_id: Optional[str] = None
+    cv_id: Optional[str] = None
+    agent_run_id: Optional[str] = None
     tailored_cv_text: str
+    tailored_cv_contact: dict[str, str] = Field(default_factory=dict)
+    tailored_cv_overview: Optional[str] = None
+    tailored_skills: list[str] = Field(default_factory=list)
+    tailored_cv_sections: dict[str, str] = Field(default_factory=dict)
     changes_summary: list[str]
+    role_alignment: list[str] = Field(default_factory=list)
+    missing_experience: list[str] = Field(default_factory=list)
+    suggested_keywords: list[str] = Field(default_factory=list)
+    warnings: list[str] = Field(default_factory=list)
 
 
 # ── Agent #9: Expiration check agent ──────────────────────────────────────────
