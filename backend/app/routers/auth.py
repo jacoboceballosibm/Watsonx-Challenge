@@ -1,6 +1,10 @@
-from fastapi import APIRouter, HTTPException
+import os
+
+from fastapi import APIRouter, HTTPException, Security
+from fastapi.security import HTTPAuthorizationCredentials
 from app.models.auth import LoginRequest, LoginResponse
-from app.services.auth_service import authenticate, logout
+from app.services.auth_service import authenticate, bearer_scheme, list_users, logout
+from app.services.profile_service import get_profile
 
 router = APIRouter()
 
@@ -15,9 +19,11 @@ def login(request: LoginRequest):
 
 
 @router.post("/logout")
-def logout_user(token: str):
+def logout_user(credentials: HTTPAuthorizationCredentials = Security(bearer_scheme)):
     """Logout user by invalidating token."""
-    success = logout(token)
+    if not credentials:
+        raise HTTPException(status_code=401, detail="Missing bearer token")
+    success = logout(credentials.credentials)
     if not success:
         raise HTTPException(status_code=404, detail="Invalid token")
     return {"message": "Logged out successfully"}
@@ -29,14 +35,21 @@ def list_demo_users():
     List available demo users for the sign-in page.
     In production, this endpoint would not exist!
     """
-    import os
+    users = list_users()
+    demo_users = []
+    for user in users:
+        profile = get_profile(user.professional_id)
+        demo_users.append(
+            {
+                "username": user.username,
+                "name": profile.name if profile else user.username,
+                "band": profile.band if profile else "",
+                "location": profile.location if profile else "",
+                "role": user.role.value,
+            }
+        )
+
     return {
-        "users": [
-            {"username": "anguyen", "name": "Alysa Nguyen", "band": "7", "location": "US"},
-            {"username": "jsmith", "name": "John Smith", "band": "6", "location": "UK"},
-            {"username": "mchen", "name": "Marcus Chen", "band": "8", "location": "SG"},
-            {"username": "swilliams", "name": "Sarah Williams", "band": "7", "location": "CA"},
-            {"username": "drodriguez", "name": "David Rodriguez", "band": "9", "location": "MX"},
-        ],
+        "users": demo_users,
         "default_password": os.getenv("DEMO_PASSWORD", "password")
     }

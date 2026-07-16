@@ -4,8 +4,10 @@ Replace with real database queries when integrating with ProM's backend.
 """
 from __future__ import annotations
 from datetime import datetime, timezone, date
+import json
 from typing import Optional
 from app.models.seat import Seat, SeatListResponse, SeatSearchParams, CandidateStatus, SeatType, StatusBreakdown
+from app.services.database import get_connection
 
 _now = datetime.now(timezone.utc)
 
@@ -434,8 +436,28 @@ _SEATS: list[Seat] = [
 ]
 
 
+def _owner_professional_id(owner_notes_id: str) -> Optional[str]:
+    owner_name = owner_notes_id.split("/")[0].strip().lower()
+    return {
+        "marcus chen": "MC2NVD9RTPW5",
+        "sarah Williams".lower(): "SW8FHK4TQNX7",
+        "david rodriguez": "DR3KGP6LMZY8",
+    }.get(owner_name)
+
+
+def _seat_from_row(row) -> Seat:
+    return Seat.model_validate_json(row["payload_json"])
+
+
+def _seat_payload(seat: Seat) -> str:
+    data = seat.model_dump(mode="json")
+    if not data.get("owner_professional_id"):
+        data["owner_professional_id"] = _owner_professional_id(seat.owner_notes_id)
+    return json.dumps(data)
+
+
 def search_seats(params: SeatSearchParams) -> SeatListResponse:
-    results = list(_SEATS)
+    results = get_all_seats()
 
     if params.query:
         q = params.query.lower()
@@ -469,9 +491,46 @@ def search_seats(params: SeatSearchParams) -> SeatListResponse:
 
 
 def get_seat_by_id(seat_id: str) -> Optional[Seat]:
-    return next((s for s in _SEATS if s.seat_id == seat_id), None)
+    with get_connection() as conn:
+        row = conn.execute(
+            "SELECT * FROM seats WHERE seat_id = ?",
+            (seat_id,),
+        ).fetchone()
+    return _seat_from_row(row) if row else None
 
 
 def get_all_seats() -> list[Seat]:
-    """Get all seats (for owner portal filtering)"""
-    return _SEATS
+    """Get all seats."""
+    with get_connection() as conn:
+        rows = conn.execute("SELECT * FROM seats ORDER BY seat_id").fetchall()
+    return [_seat_from_row(row) for row in rows]
+
+
+def update_seat(seat: Seat) -> Seat:
+    payload = _seat_payload(seat)
+    with get_connection() as conn:
+        conn.execute(
+            """
+            UPDATE seats
+            SET owner_professional_id = ?,
+                payload_json = ?,
+                updated_at = CURRENT_TIMESTAMP
+            WHERE seat_id = ?
+            """,
+            (seat.owner_professional_id, payload, seat.seat_id),
+        )
+    return seat
+
+
+def seed_seats() -> None:
+    with get_connection() as conn:
+        for seat in _SEATS:
+            owner_professional_id = _owner_professional_id(seat.owner_notes_id)
+            seat.owner_professional_id = owner_professional_id
+            conn.execute(
+                """
+                INSERT OR IGNORE INTO seats (seat_id, owner_professional_id, payload_json)
+                VALUES (?, ?, ?)
+                """,
+                (seat.seat_id, owner_professional_id, _seat_payload(seat)),
+            )

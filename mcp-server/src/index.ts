@@ -2,13 +2,13 @@
 /**
  * ProM MCP Server
  * ─────────────────────────────────────────────────────────────────────────────
- * Exposes the five agentic tools as MCP tools that a watsonx.ai agent can
- * call during a conversation.  The tools make HTTP calls to the FastAPI
+ * Exposes the five agentic tools as MCP tools that an agent client can
+ * call during a conversation. The tools make HTTP calls to the FastAPI
  * backend running at PROM_API_URL (defaults to http://127.0.0.1:8000).
  *
  * Environment variables (set in mcp.json env block):
  *   PROM_API_URL        — Base URL of the FastAPI backend
- *   WATSONX_API_KEY     — Your watsonx.ai API key (injected by caller, never logged)
+ *   OPENAI_API_KEY      - Optional for tools that call OpenAI through the backend
  */
 
 import { McpServer } from "@modelcontextprotocol/server";

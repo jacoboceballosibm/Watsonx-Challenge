@@ -29,6 +29,7 @@ class Seat(BaseModel):
     title: str
     client_name: str
     owner_notes_id: str
+    owner_professional_id: Optional[str] = None
     service: str
     requested_band_high: str
     requested_band_low: str

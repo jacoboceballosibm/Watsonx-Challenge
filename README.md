@@ -15,7 +15,7 @@ prom-modernized/
 │   │   └── agents/           # one file per agentic feature
 │   ├── requirements.txt
 │   └── .env.example
-├── mcp-server/               # Node.js MCP server (exposes tools to watsonx agents)
+├── mcp-server/               # Node.js MCP server (exposes tools to agent clients)
 │   ├── src/index.ts          # All 5 MCP tools defined here
 │   ├── package.json
 │   └── tsconfig.json
@@ -45,11 +45,16 @@ Features #3 (formal vs real label) and #4 (status visibility) are handled purely
 cd backend
 python -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
-cp .env.example .env          # fill in WATSONX_API_KEY etc.
+cp .env.example .env          # fill in OPENAI_API_KEY etc.
 uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload
 ```
 
 API docs available at http://127.0.0.1:8000/api/docs
+
+The backend uses a local SQLite database at `backend/prom.db` by default
+(`DATABASE_URL=sqlite:///./prom.db`). On startup it creates the schema and seeds
+demo users, profiles, and seats from the bundled sample data. Auth uses demo
+username/password login plus persisted bearer sessions.
 
 ### 2. MCP server
 
@@ -80,12 +85,15 @@ See [AUTHENTICATION.md](AUTHENTICATION.md) for complete details.
 
 ## Wiring the AI agents
 
-Each agent file has a `# TODO: replace stub with watsonx.ai LLM call` comment.
-When you add the watsonx integration:
+Agent #8, the CV tailor, is wired to the OpenAI Agents SDK. Set these values in
+`backend/.env`:
 
-1. Add `WATSONX_API_KEY`, `WATSONX_URL`, `WATSONX_PROJECT_ID` to `.env`
-2. Install `ibm-watsonx-ai` into the backend venv
-3. Replace the stub text-generation in each `agents/*.py` file with an actual LLM call
+```bash
+OPENAI_API_KEY=your_openai_api_key_here
+OPENAI_CV_TAILOR_MODEL=gpt-4.1-mini
+```
+
+The remaining agent files are still draft stubs and can be migrated one by one.
 
 ## MCP server registration (mcp.json)
 

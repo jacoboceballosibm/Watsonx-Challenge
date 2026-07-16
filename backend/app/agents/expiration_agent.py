@@ -6,7 +6,7 @@ Solution: Reviews listings on a schedule, checks days-since-update, drafts the
           reconfirmation nudge to the owner
 """
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import List, Dict, Any
 from app.models.seat import Seat
 from app.models.agent import AgentResponse
@@ -34,7 +34,7 @@ def check_listing_expiration(seats: List[Seat], threshold_days: int = 7) -> Agen
             # Use last_updated as fallback
             expiration_date = seat.last_updated + timedelta(days=30)
 
-        days_until_expiration = (expiration_date - datetime.now()).days
+        days_until_expiration = (expiration_date - datetime.now(timezone.utc)).days
 
         # Categorize listings
         if days_until_expiration < 0:
