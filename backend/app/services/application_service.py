@@ -30,6 +30,21 @@ _SEED_APPLICATIONS: list[tuple[str, str, CandidateStatus]] = [
     ("SEAT-005", "DR3KGP6LMZY8", CandidateStatus.PROPOSED),
     ("SEAT-005", "JS7BQM3PXWK1", CandidateStatus.PROPOSED),
     ("SEAT-005", "A5XCVSPCNN2O", CandidateStatus.WITHDRAWN),
+    # SEAT-020 Full-Stack Developer (David) - 3 selected, 2 needed
+    ("SEAT-020", "JS7BQM3PXWK1", CandidateStatus.SELECTED),
+    ("SEAT-020", "A5XCVSPCNN2O", CandidateStatus.SELECTED),
+    ("SEAT-020", "SW8FHK4TQNX7", CandidateStatus.SELECTED),
+    ("SEAT-020", "MC2NVD9RTPW5", CandidateStatus.PROPOSED),
+    # SEAT-021 Data Engineer (David) - 2 selected, 1 needed
+    ("SEAT-021", "SW8FHK4TQNX7", CandidateStatus.SELECTED),
+    ("SEAT-021", "A5XCVSPCNN2O", CandidateStatus.SELECTED),
+    ("SEAT-021", "JS7BQM3PXWK1", CandidateStatus.PROPOSED),
+    # SEAT-022 Cloud Solutions Architect (David) - 4 selected, 3 needed
+    ("SEAT-022", "DR3KGP6LMZY8", CandidateStatus.SELECTED),
+    ("SEAT-022", "MC2NVD9RTPW5", CandidateStatus.SELECTED),
+    ("SEAT-022", "JS7BQM3PXWK1", CandidateStatus.SELECTED),
+    ("SEAT-022", "SW8FHK4TQNX7", CandidateStatus.SELECTED),
+    ("SEAT-022", "A5XCVSPCNN2O", CandidateStatus.PROPOSED),
 ]
 
 

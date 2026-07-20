@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Port Configuration Test</title>
+  <script src="js/config.js"></script>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      max-width: 800px;
+      margin: 40px auto;
+      padding: 20px;
+      line-height: 1.6;
+    }
+    .test-box {
+      border: 2px solid #ddd;
+      border-radius: 8px;
+      padding: 20px;
+      margin: 20px 0;
+    }
+    .test-box.success {
+      border-color: #0f62fe;
+      background: #e5f1ff;
+    }
+    .test-box.error {
+      border-color: #da1e28;
+      background: #fff1f1;
+    }
+    .test-box.warning {
+      border-color: #f1c21b;
+      background: #fef7e0;
+    }
+    h1 {
+      color: #161616;
+    }
+    h2 {
+      color: #393939;
+      margin-top: 0;
+    }
+    code {
+      background: #f4f4f4;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-family: 'IBM Plex Mono', monospace;
+    }
+    .btn {
+      background: #0f62fe;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 4px;
+      cursor: pointer;
+      margin-right: 10px;
+      margin-top: 10px;
+    }
+    .btn:hover {
+      background: #0353e9;
+    }
+    .status {
+      font-weight: bold;
+      font-size: 1.2em;
+      margin-bottom: 10px;
+    }
+    .success-icon { color: #24a148; }
+    .error-icon { color: #da1e28; }
+    .info {
+      background: #f4f4f4;
+      padding: 15px;
+      border-radius: 4px;
+      margin: 10px 0;
+    }
+  </style>
+</head>
+<body>
+  <h1>🔧 Port Configuration Test</h1>
+  <p>This page helps you verify that your frontend and backend are configured correctly.</p>
+
+  <div id="config-test" class="test-box">
+    <h2>Configuration Detection</h2>
+    <div id="config-details">Loading...</div>
+  </div>
+
+  <div id="connection-test" class="test-box">
+    <h2>Backend Connection</h2>
+    <p>Test if the frontend can reach the backend API:</p>
+    <button class="btn" onclick="testBackendConnection()">Test Connection</button>
+    <div id="connection-result" style="margin-top: 15px;"></div>
+  </div>
+
+  <div class="test-box">
+    <h2>Quick Actions</h2>
+    <p>Change backend port:</p>
+    <input type="number" id="port-input" placeholder="8003" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px; width: 100px;">
+    <button class="btn" onclick="changePort()">Set Port</button>
+    <button class="btn" onclick="clearPort()" style="background: #8d8d8d;">Reset to Default</button>
+
+    <div class="info" style="margin-top: 15px;">
+      <strong>Note:</strong> You can also add <code>?backend_port=XXXX</code> to the URL to set the port.
+    </div>
+  </div>
+
+  <script>
+    // Display current configuration
+    function displayConfig() {
+      const storedPort = localStorage.getItem('BACKEND_PORT');
+      const params = new URLSearchParams(window.location.search);
+      const queryPort = params.get('backend_port');
+
+      const configBox = document.getElementById('config-test');
+      const configDetails = document.getElementById('config-details');
+
+      let html = '<div class="status"><span class="success-icon">✓</span> Configuration loaded</div>';
+      html += `<p><strong>Backend API URL:</strong> <code>${API}</code></p>`;
+      html += `<p><strong>Query parameter:</strong> ${queryPort || '(none)'}</p>`;
+      html += `<p><strong>localStorage BACKEND_PORT:</strong> ${storedPort || '(not set, using default 8000)'}</p>`;
+      html += `<p><strong>Frontend served from:</strong> <code>${window.location.origin}</code></p>`;
+
+      configDetails.innerHTML = html;
+      configBox.className = 'test-box success';
+    }
+
+    // Test backend connection
+    async function testBackendConnection() {
+      const resultDiv = document.getElementById('connection-result');
+      const connectionBox = document.getElementById('connection-test');
+
+      resultDiv.innerHTML = '<div>Testing connection to <code>' + API + '/health</code>...</div>';
+      connectionBox.className = 'test-box';
+
+      try {
+        const startTime = Date.now();
+        const response = await fetch(`${API}/health`);
+        const elapsed = Date.now() - startTime;
+
+        if (response.ok) {
+          const data = await response.json();
+          resultDiv.innerHTML = `
+            <div class="status"><span class="success-icon">✓</span> Connection successful!</div>
+            <p>Backend is reachable at <code>${API}</code></p>
+            <p>Response time: ${elapsed}ms</p>
+            <p>Response: <code>${JSON.stringify(data)}</code></p>
+          `;
+          connectionBox.className = 'test-box success';
+        } else {
+          throw new Error(`HTTP ${response.status}`);
+        }
+      } catch (error) {
+        resultDiv.innerHTML = `
+          <div class="status"><span class="error-icon">✗</span> Connection failed</div>
+          <p><strong>Error:</strong> ${error.message}</p>
+          <div class="info">
+            <strong>Troubleshooting:</strong>
+            <ul>
+              <li>Is the backend running? Check terminal for errors.</li>
+              <li>Is it running on the correct port? Current config: <code>${API}</code></li>
+              <li>Try: <code>curl ${API}/health</code> in terminal</li>
+              <li>Check backend logs for CORS or other errors</li>
+            </ul>
+          </div>
+        `;
+        connectionBox.className = 'test-box error';
+      }
+    }
+
+    // Change backend port
+    function changePort() {
+      const portInput = document.getElementById('port-input');
+      const port = portInput.value;
+
+      if (!port || isNaN(port)) {
+        alert('Please enter a valid port number');
+        return;
+      }
+
+      localStorage.setItem('BACKEND_PORT', port);
+      alert(`Backend port set to ${port}. Reloading page...`);
+      location.reload();
+    }
+
+    // Clear port setting
+    function clearPort() {
+      localStorage.removeItem('BACKEND_PORT');
+      alert('Backend port reset to default (8000). Reloading page...');
+      location.reload();
+    }
+
+    // Initialize
+    displayConfig();
+
+    // Auto-test connection on load
+    setTimeout(() => testBackendConnection(), 500);
+  </script>
+</body>
+</html>

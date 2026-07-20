@@ -1,9 +1,11 @@
 /**
  * Owner Portal JavaScript
  * Handles owner-specific functionality for listing management
+ *
+ * NOTE: API is now defined in config.js
  */
 
-const API_BASE = "http://127.0.0.1:8000/api";
+const API_BASE = API; // Using API from config.js
 
 // ── Authentication ────────────────────────────────────────────────────────────
 function checkOwnerAuth() {

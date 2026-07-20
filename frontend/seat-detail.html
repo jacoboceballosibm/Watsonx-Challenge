@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Position Details — IBM ProM</title>
   <link rel="stylesheet" href="css/prom.css" />
+  <script src="js/config.js"></script>
 </head>
 <body>
 
@@ -24,7 +25,7 @@
 
 <!-- ── Back Navigation ───────────────────────────────────────────────────────── -->
 <div style="background:var(--bg);border-bottom:1px solid var(--border);padding:.75rem 1.5rem">
-  <a href="index.html" style="color:var(--ibm-blue);text-decoration:none;font-size:14px">← Back to Find an open seat</a>
+  <a href="#" onclick="goBack(); return false;" style="color:var(--ibm-blue);text-decoration:none;font-size:14px">← Back</a>
 </div>
 
 <!-- ── Main Content ──────────────────────────────────────────────────────────── -->
@@ -606,7 +607,7 @@ async function draftProjectContactEmail(name, email, positionTitle, seatId) {
     const professionalId = localStorage.getItem('prom_professional_id') || 'PROF-001';
 
     // Call outreach draft API
-    const res = await fetch('http://127.0.0.1:8000/api/agents/outreach-draft', {
+    const res = await fetch(`${API}/agents/outreach-draft`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -683,7 +684,7 @@ async function sendDraftEmail(seatId, professionalId) {
   btn.textContent = 'Sending...';
 
   try {
-    const res = await fetch('http://127.0.0.1:8000/api/agents/outreach-send', {
+    const res = await fetch(`${API}/agents/outreach-send`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -715,9 +716,23 @@ async function sendDraftEmail(seatId, professionalId) {
   }
 }
 
+// Back button function
+function goBack() {
+  const referrer = document.referrer;
+  // Check if coming from owner page
+  if (referrer.includes('owner.html')) {
+    const backendPort = localStorage.getItem('BACKEND_PORT') || '8000';
+    window.location.href = `owner.html?backend_port=${backendPort}`;
+  } else {
+    // Go to candidate view
+    window.history.back();
+  }
+}
+
 // Initialize
 const urlParams = new URLSearchParams(window.location.search);
 const seatId = urlParams.get('id');
+console.log('Seat ID from URL:', seatId);
 
 async function loadSeatDetails() {
   if (!seatId) {
@@ -725,11 +740,77 @@ async function loadSeatDetails() {
     return;
   }
 
-  // Simulate loading delay
-  setTimeout(() => {
+  try {
+    console.log('Fetching seat details for:', seatId);
+    console.log('API endpoint:', API);
+    const token = localStorage.getItem('prom_token');
+    const url = `${API}/seats/${encodeURIComponent(seatId)}`;
+    console.log('Full URL:', url);
+
+    const res = await fetch(url, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+
+    console.log('Response status:', res.status);
+
+    if (!res.ok) {
+      const errorText = await res.text();
+      console.error('Failed to fetch seat:', res.status, errorText);
+      throw new Error('Seat not found');
+    }
+
+    const seatData = await res.json();
+    console.log('Loaded seat data:', seatData);
+
+    // Map API data to expected format
+    const mappedData = {
+      title: seatData.title || "Position",
+      location: seatData.work_location || "Location TBD",
+      client: seatData.client_name || "Client",
+      id: seatData.seat_id,
+      status: seatData.is_available ? "Open" : "Closed",
+      profsInPlay: seatData.profs_in_play || 0,
+      proposed: seatData.status_breakdown?.proposed || 0,
+      selected: seatData.status_breakdown?.selected || 0,
+      notSelected: seatData.status_breakdown?.not_selected || 0,
+      positionsNeeded: seatData.positions_still_needed || 1,
+      fulfillmentRisk: "Medium",
+      ownerName: seatData.owner_notes_id ? seatData.owner_notes_id.split('/')[0] : "Listing Owner",
+      updateDate: seatData.last_updated ? new Date(seatData.last_updated).toLocaleDateString() : "Recently",
+      update: `Position updated ${seatData.days_since_update || 0} days ago`,
+      startDate: seatData.start_date || "TBD",
+      endDate: "TBD",
+      bandLow: seatData.requested_band_low || "N/A",
+      bandHigh: seatData.requested_band_high || "N/A",
+      clearance: seatData.clearance_needed || "None required",
+      remote: seatData.work_remotely || false,
+      hoursPerWeek: "40",
+      service: seatData.service || "Service Area",
+      serviceArea: seatData.sector || "Sector",
+      skills: ["Skills to be loaded"],
+      contractStatus: "Active",
+      clientType: seatData.industry || "Industry",
+      description: `Position for ${seatData.title || 'this role'} at ${seatData.client_name || 'client'}.`,
+      responsibilities: [
+        "Lead development efforts",
+        "Collaborate with team members",
+        "Deliver high-quality solutions"
+      ],
+      qualifications: [
+        `Band ${seatData.requested_band_low}-${seatData.requested_band_high} level`,
+        `Location: ${seatData.work_location}`,
+        `${seatData.work_remotely ? 'Remote work available' : 'On-site position'}`
+      ],
+    };
+
+    console.log('Mapped data:', mappedData);
+    renderPage(mappedData);
+  } catch (err) {
+    console.error('Error loading seat:', err);
+    // Fallback to fake data if API fails
     const fakeData = generateFakeData();
     renderPage(fakeData);
-  }, 800);
+  }
 }
 
 // Check auth and load

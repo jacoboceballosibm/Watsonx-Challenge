@@ -2,9 +2,9 @@
  * prom.js — ProM Modernized frontend
  * Handles tab navigation, API calls to the FastAPI backend,
  * and rendering all three pages including agentic feature panels.
+ *
+ * NOTE: API base URL is now defined in config.js
  */
-
-const API = "http://127.0.0.1:8000/api";
 
 // Get current user from session
 function getCurrentUserId() {
@@ -723,7 +723,7 @@ async function runStaleCheckForProfile() {
           Nudge drafted below.
         </div>
         <div class="ai-panel">
-          <div class="ai-panel-header"><span class="ai-icon">🤖</span> Draft nudge to owner</div>
+          <div class="ai-panel-header"><span class="ai-icon"></span> Draft nudge to owner</div>
           <div class="ai-panel-body">
             <textarea id="stale-nudge-text">${result.nudge_draft}</textarea>
             <div class="ai-panel-actions">
@@ -794,7 +794,7 @@ async function loadRecommendations() {
         ${result.recommendations
           .map(
             (r) => `
-          <li class="rec-item" style="cursor:pointer" onclick="window.location.href='seat-detail.html?id=${encodeURIComponent(r.seat_id)}'">
+          <li class="rec-item" style="cursor:pointer" onclick="window.location.href='seat-detail.html?id=${encodeURIComponent(r.seat_id)}&backend_port=${localStorage.getItem('BACKEND_PORT') || '8000'}'">
             <div>
               <div style="font-weight:600;font-size:13px">${r.title || r.seat_id}</div>
               <div class="text-sm text-muted">${r.client_name || ""}</div>
@@ -923,7 +923,7 @@ function renderSeatRow(seat) {
 
 function expandSeatDetails(seatId) {
   // Navigate to detail page
-  window.location.href = `seat-detail.html?id=${seatId}`;
+  window.location.href = `seat-detail.html?id=${seatId}&backend_port=${localStorage.getItem('BACKEND_PORT') || '8000'}`;
   // TODO: Implement detailed view
 }
 
@@ -981,7 +981,7 @@ function renderSeatCard(seat) {
         <div class="seat-card-actions">
           <button class="btn btn-primary btn-sm" onclick="openOutreachPanel('${seat.seat_id}')">✉ Draft outreach email</button>
           <button class="btn btn-secondary btn-sm" onclick="openCVTailorPanel('${seat.seat_id}')">📄 Tailor my CV</button>
-          <button class="btn btn-ghost btn-sm" onclick="runMismatchCheck('${seat.seat_id}')">🔍 Check mismatch</button>
+          <button class="btn btn-ghost btn-sm" onclick="runMismatchCheck('${seat.seat_id}')">Check mismatch</button>
         </div>
         <div id="agent-panel-${seat.seat_id}"></div>
       </div>

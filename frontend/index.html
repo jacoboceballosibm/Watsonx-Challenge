@@ -65,14 +65,26 @@
           <label>Skills</label>
           <span id="prof-skills">—</span>
         </div>
+      </div>
 
-        <hr class="divider" />
+      <hr class="profile-divider" />
+
+      <div class="card profile-card" style="padding-top: 0;">
         <div class="profile-actions">
-          <button class="btn btn-secondary btn-sm">Professional inquiry…</button>
-          <button class="btn btn-secondary btn-sm" onclick="findMatchingSeats(); document.querySelector('[data-tab=page-find]').click()">Find matching seats</button>
-          <button class="btn btn-secondary btn-sm">View util %</button>
-          <button class="btn btn-secondary btn-sm">View assignment data</button>
+          <button class="btn">Professional inquiry</button>
+          <button class="btn" onclick="findMatchingSeats(); document.querySelector('[data-tab=page-find]').click()">Find matching seats</button>
+          <button class="btn">View util %</button>
+          <button class="btn">View assignment data</button>
         </div>
+      </div>
+
+      <!-- CV Builder CTA -->
+      <div class="card cv-builder-cta-card" style="margin-top:0.5rem">
+        <div class="cv-builder-cta-copy">
+          <span class="card-title">CV builder</span>
+          <p class="cv-workbench-subtitle">Use the full ProM CV builder with the same section layout as the published resume view.</p>
+        </div>
+        <button class="btn btn-primary" type="button" onclick="openTab('page-cv-builder')">Open CV builder</button>
       </div>
 
     </aside>
@@ -82,21 +94,11 @@
       <!-- Agent #7: AI recommendations -->
       <div class="card" style="margin-bottom:1.25rem">
         <div class="card-header">
-          <span class="card-title">🤖 Agent: Recommended seats for you</span>
+          <span class="card-title">Agent: Recommended seats for you</span>
           <button class="btn btn-ghost btn-sm" type="button" onclick="loadRecommendations()">Refresh</button>
         </div>
-        <p class="text-sm text-muted" style="margin:0 1.25rem .5rem">
-          Ranked from your CV and skills against currently available open seats.
-        </p>
+        <p class="text-sm text-muted" style="margin:0 1.25rem 1rem">→ Ranked from your CV and skills against currently available open seats.</p>
         <div id="recs-container"><span class="spinner"></span></div>
-      </div>
-
-      <div class="card cv-builder-cta-card" style="margin-bottom:1.25rem">
-        <div class="cv-builder-cta-copy">
-          <span class="card-title">CV builder</span>
-          <p class="cv-workbench-subtitle">Use the full ProM CV builder with the same section layout as the published resume view.</p>
-        </div>
-        <button class="btn btn-primary" type="button" onclick="openTab('page-cv-builder')">Open CV builder</button>
       </div>
 
       <!-- Current open seats in play -->
@@ -113,7 +115,7 @@
 
           <div class="card seat-stale-check-card">
             <div class="card-header">
-              <span class="card-title">🤖 Agent: Stale listing check</span>
+              <span class="card-title">Agent: Stale listing check</span>
             </div>
             <p class="text-sm text-muted" style="margin-bottom:.75rem">
               Check the seats you already applied to and flag listings with no movement so you can follow up faster.
@@ -226,7 +228,7 @@
         placeholder="Search all text-based fields…"
         autocomplete="off"
       />
-      <span class="search-icon">🔍</span>
+      <span class="search-icon"></span>
     </div>
     <button class="btn btn-primary" onclick="searchSeats()">Search</button>
   </div>
@@ -715,6 +717,7 @@ Kubernetes</textarea>
 <!-- ── Toast container ────────────────────────────────────────────────────── -->
 <div id="toast-container" class="toast-container" aria-live="polite"></div>
 
+<script src="js/config.js"></script>
 <script src="js/prom.js?v=20260716-preview-minimize"></script>
 </body>
 </html>

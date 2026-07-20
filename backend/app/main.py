@@ -50,6 +50,7 @@ def startup() -> None:
     seed_users()
     seed_seats()
     seed_applications()
+    logger.info("Dashboard data will be generated on-demand when owner portal is accessed")
 
 
 @app.get("/api/health")
