@@ -3,7 +3,9 @@ from typing import Optional, List
 from datetime import datetime, timedelta, timezone
 from pydantic import BaseModel
 
+from app.models.application import SeatApplicantsResponse
 from app.models.seat import Seat, SeatType
+from app.services.application_service import list_applicants_for_seat
 from app.services.seat_service import get_all_seats, get_seat_by_id, update_seat
 from app.models.auth import User
 from app.services.auth_service import get_current_user
@@ -60,6 +62,23 @@ def get_owner_listings(current_user: User = Depends(get_current_user)):
             seat.is_expired = days_left < 0
 
     return owner_seats
+
+
+@router.get("/listings/{seat_id}/applicants", response_model=SeatApplicantsResponse)
+def get_listing_applicants(seat_id: str, current_user: User = Depends(get_current_user)):
+    """Return professionals already applied / in play for an owned listing."""
+    seat = get_seat_by_id(seat_id)
+    if not seat:
+        raise HTTPException(status_code=404, detail="Seat not found")
+    if not _is_owner(seat, current_user):
+        raise HTTPException(status_code=403, detail="Not authorized to view applicants for this listing")
+
+    applicants = list_applicants_for_seat(seat_id)
+    return SeatApplicantsResponse(
+        seat_id=seat_id,
+        total=len(applicants),
+        applicants=applicants,
+    )
 
 
 @router.post("/confirm-listing", response_model=ListingActionResponse)

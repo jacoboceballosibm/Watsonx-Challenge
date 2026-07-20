@@ -50,7 +50,16 @@ async def outreach_send(request: OutreachSendRequest):
 
 @router.post("/recommendations", response_model=RecommendationResult)
 async def recommendations(request: RecommendationRequest):
-    return await run_recommendations(request)
+    try:
+        return await run_recommendations(request)
+    except LookupError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except PermissionError as exc:
+        raise HTTPException(status_code=403, detail=str(exc)) from exc
+    except Exception as exc:
+        raise HTTPException(status_code=503, detail=f"Recommendations failed: {exc}") from exc
 
 
 @router.post("/cv-tailor", response_model=CVTailorResult)

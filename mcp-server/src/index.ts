@@ -128,8 +128,8 @@ server.registerTool(
   {
     description:
       "Returns AI-generated recommendations. " +
-      "In candidate mode: recommends open seats for the professional. " +
-      "In owner mode: recommends candidate professionals for a seat owner's listings.",
+      "In candidate mode: recommends open seats for the professional based on their CV. " +
+      "In owner mode: ranks applicants already in play for a specific seat_id by fit.",
     inputSchema: z.object({
       professional_id: z
         .string()
@@ -138,15 +138,33 @@ server.registerTool(
         .enum(["candidate", "owner"])
         .optional()
         .default("candidate")
-        .describe("'candidate' for seat recs, 'owner' for candidate recs"),
+        .describe("'candidate' for seat recs, 'owner' for applicant ranking"),
+      seat_id: z
+        .string()
+        .optional()
+        .describe("Required for owner mode: the seat whose in-play applicants to rank"),
+      cv_id: z
+        .string()
+        .optional()
+        .describe("Optional CV id for candidate mode; defaults to the professional's default CV"),
+      limit: z
+        .number()
+        .int()
+        .optional()
+        .default(5)
+        .describe("Max recommendations to return"),
     }),
   },
-  async ({ professional_id, mode }) => {
+  async ({ professional_id, mode, seat_id, cv_id, limit }) => {
     try {
-      const result = await apiFetch("/api/agents/recommendations", {
+      const body: Record<string, unknown> = {
         professional_id,
         mode,
-      });
+        limit,
+      };
+      if (seat_id) body.seat_id = seat_id;
+      if (cv_id) body.cv_id = cv_id;
+      const result = await apiFetch("/api/agents/recommendations", body);
       return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
     } catch (err) {
       return {

@@ -118,6 +118,18 @@ def init_database() -> None:
                 FOREIGN KEY (cv_id) REFERENCES cvs(cv_id) ON DELETE SET NULL,
                 FOREIGN KEY (professional_id) REFERENCES profiles(professional_id) ON DELETE CASCADE
             );
+
+            CREATE TABLE IF NOT EXISTS seat_applications (
+                application_id TEXT PRIMARY KEY,
+                seat_id TEXT NOT NULL,
+                professional_id TEXT NOT NULL,
+                status TEXT NOT NULL DEFAULT 'P',
+                applied_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                notes TEXT,
+                UNIQUE (seat_id, professional_id),
+                FOREIGN KEY (seat_id) REFERENCES seats(seat_id) ON DELETE CASCADE,
+                FOREIGN KEY (professional_id) REFERENCES profiles(professional_id) ON DELETE CASCADE
+            );
             """
         )
         _ensure_column(conn, "profiles", "cv_overview", "TEXT")

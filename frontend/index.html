@@ -83,7 +83,11 @@
       <div class="card" style="margin-bottom:1.25rem">
         <div class="card-header">
           <span class="card-title">🤖 Agent: Recommended seats for you</span>
+          <button class="btn btn-ghost btn-sm" type="button" onclick="loadRecommendations()">Refresh</button>
         </div>
+        <p class="text-sm text-muted" style="margin:0 1.25rem .5rem">
+          Ranked from your CV and skills against currently available open seats.
+        </p>
         <div id="recs-container"><span class="spinner"></span></div>
       </div>
 
