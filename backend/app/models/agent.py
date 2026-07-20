@@ -61,16 +61,50 @@ class OutreachSendResult(BaseModel):
 
 
 # ── Agent #7: AI project recommendations ─────────────────────────────────────
+class RecommendationMode(str, Enum):
+    CANDIDATE = "candidate"
+    OWNER = "owner"
+
+
+class CandidateSeatRecommendation(BaseModel):
+    seat_id: str
+    title: str
+    client_name: str
+    match_score: float = Field(ge=0.0, le=1.0)
+    reason: str
+    aligned_skills: list[str] = Field(default_factory=list)
+    gaps: list[str] = Field(default_factory=list)
+
+
+class OwnerApplicantRecommendation(BaseModel):
+    professional_id: str
+    name: str
+    application_id: Optional[str] = None
+    status: Optional[str] = None
+    match_score: float = Field(ge=0.0, le=1.0)
+    reason: str
+    aligned_skills: list[str] = Field(default_factory=list)
+    gaps: list[str] = Field(default_factory=list)
+    band: Optional[str] = None
+    location: Optional[str] = None
+
+
 class RecommendationRequest(BaseModel):
     professional_id: str
-    mode: str = "candidate"  # "candidate" or "owner"
+    mode: RecommendationMode = RecommendationMode.CANDIDATE
+    seat_id: Optional[str] = None
+    cv_id: Optional[str] = None
+    limit: int = Field(default=5, ge=1, le=20)
 
 
 class RecommendationResult(BaseModel):
     professional_id: str
-    mode: str
-    recommendations: list[dict]
+    mode: RecommendationMode
+    seat_id: Optional[str] = None
+    recommendations: list[CandidateSeatRecommendation | OwnerApplicantRecommendation]
     reasoning: Optional[str] = None
+    source: str = "heuristic"  # "openai" | "heuristic"
+    warnings: list[str] = Field(default_factory=list)
 
 
 # ── Agent #8: AI CV tailor ────────────────────────────────────────────────────

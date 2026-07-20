@@ -6,6 +6,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 from app.routers import profile, seats, agents, auth, owner, cvs
+from app.services.application_service import seed_applications
 from app.services.auth_service import seed_users
 from app.services.cv_service import seed_cvs_from_profiles
 from app.services.database import init_database
@@ -48,6 +49,7 @@ def startup() -> None:
     seed_cvs_from_profiles()
     seed_users()
     seed_seats()
+    seed_applications()
 
 
 @app.get("/api/health")

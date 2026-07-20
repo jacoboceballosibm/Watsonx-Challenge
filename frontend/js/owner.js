@@ -109,6 +109,8 @@ function renderOwnerListings(seats) {
           ${actionButtons}
         </div>
 
+        <div id="applicants-panel-${seat.seat_id}" class="owner-applicants-panel" style="display:none;margin-top:1rem;padding-top:1rem;border-top:1px solid var(--border)"></div>
+
         ${alertBox}
       </div>
     `;
@@ -135,6 +137,7 @@ function getActionButtons(seat) {
   if (seat.is_expired) {
     return `
       <button class="btn btn-primary btn-sm" onclick="reactivateListing('${seat.seat_id}')">Reactivate listing</button>
+      <button class="btn btn-secondary btn-sm" onclick="toggleApplicants('${seat.seat_id}')">View applicants</button>
       <button class="btn btn-secondary btn-sm" onclick="editListing('${seat.seat_id}')">Edit listing</button>
       <button class="btn btn-ghost btn-sm text-danger" onclick="deleteListing('${seat.seat_id}')">Delete listing</button>
     `;
@@ -147,6 +150,7 @@ function getActionButtons(seat) {
 
   return `
     <button class="btn btn-primary btn-sm" onclick="confirmListing('${seat.seat_id}')">Confirm still active</button>
+    <button class="btn btn-secondary btn-sm" onclick="toggleApplicants('${seat.seat_id}')">View applicants</button>
     <button class="btn btn-secondary btn-sm" onclick="editListing('${seat.seat_id}')">Edit listing</button>
     ${typeButton}
     <button class="btn btn-ghost btn-sm text-danger" onclick="closeListing('${seat.seat_id}')">Close listing</button>
@@ -475,6 +479,170 @@ async function runMismatchCheck() {
   } finally {
     btn.disabled = false;
     btn.textContent = "Check for filled-but-posted listings";
+  }
+}
+
+// ── Applicants + AI ranking ───────────────────────────────────────────────────
+const APPLICANTS_CACHE = {};
+
+async function toggleApplicants(seatId) {
+  const panel = document.getElementById(`applicants-panel-${seatId}`);
+  if (!panel) return;
+
+  if (panel.style.display !== "none" && panel.dataset.loaded === "1") {
+    panel.style.display = "none";
+    return;
+  }
+
+  panel.style.display = "block";
+  panel.innerHTML = '<span class="spinner"></span>';
+
+  try {
+    const token = localStorage.getItem("prom_token");
+    const res = await fetch(`${API_BASE}/owner/listings/${encodeURIComponent(seatId)}/applicants`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!res.ok) {
+      const detail = await res.text();
+      throw new Error(detail || `HTTP ${res.status}`);
+    }
+    const data = await res.json();
+    panel.dataset.loaded = "1";
+    APPLICANTS_CACHE[seatId] = data.applicants || [];
+    renderApplicantsPanel(panel, seatId, APPLICANTS_CACHE[seatId]);
+  } catch (err) {
+    console.error(err);
+    panel.innerHTML = `<p class="text-muted text-sm">Could not load applicants${err?.message ? `: ${err.message}` : "."}</p>`;
+  }
+}
+
+function applicantCardHtml(applicant, rankMeta = null) {
+  const matchHtml = rankMeta
+    ? `<div class="rec-score">${Math.round((rankMeta.match_score || 0) * 100)}% match</div>`
+    : "";
+  const reasonHtml = rankMeta?.reason
+    ? `<div class="rec-reason">${rankMeta.reason}</div>`
+    : "";
+  const alignedHtml =
+    rankMeta?.aligned_skills?.length
+      ? `<div class="text-sm" style="margin-top:.25rem;color:var(--ibm-blue)">${rankMeta.aligned_skills
+          .slice(0, 4)
+          .join(" · ")}</div>`
+      : "";
+
+  return `
+    <div class="rec-item" style="margin-bottom:.5rem" data-professional-id="${applicant.professional_id}">
+      <div>
+        <div style="font-weight:600;font-size:13px">${applicant.name}</div>
+        <div class="text-sm text-muted">${applicant.band ? `Band ${applicant.band}` : ""} ${
+    applicant.location ? `· ${applicant.location}` : ""
+  } · Status ${applicant.status}</div>
+        <div class="text-sm">${(applicant.skills || []).slice(0, 5).join(" · ")}</div>
+        ${reasonHtml}
+        ${alignedHtml}
+      </div>
+      ${matchHtml}
+    </div>`;
+}
+
+function renderApplicantsPanel(panel, seatId, applicants, rankById = null, statusHtml = "") {
+  if (!applicants.length) {
+    panel.innerHTML = `
+      <div class="card-header" style="padding:0;margin-bottom:.75rem">
+        <span class="card-title">Applicants in play</span>
+      </div>
+      <p class="text-muted text-sm">No applicants currently in play for this listing.</p>
+    `;
+    return;
+  }
+
+  const ordered = rankById
+    ? [...applicants].sort((a, b) => {
+        const scoreA = rankById[a.professional_id]?.match_score ?? -1;
+        const scoreB = rankById[b.professional_id]?.match_score ?? -1;
+        return scoreB - scoreA;
+      })
+    : applicants;
+
+  panel.innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:1rem;margin-bottom:.75rem;flex-wrap:wrap">
+      <div>
+        <div class="card-title">Applicants in play (${applicants.length})</div>
+        <p class="text-sm text-muted" style="margin:0">Only professionals who already applied are shown.</p>
+      </div>
+      <button class="btn btn-primary btn-sm" type="button" id="rank-btn-${seatId}" onclick="rankApplicantsByAI('${seatId}')">
+        Rank by AI fit
+      </button>
+    </div>
+    <div id="applicants-status-${seatId}">${statusHtml}</div>
+    <div id="applicants-list-${seatId}">
+      ${ordered.map((a) => applicantCardHtml(a, rankById ? rankById[a.professional_id] : null)).join("")}
+    </div>
+  `;
+}
+
+async function rankApplicantsByAI(seatId) {
+  const panel = document.getElementById(`applicants-panel-${seatId}`);
+  const status = document.getElementById(`applicants-status-${seatId}`);
+  const button = document.getElementById(`rank-btn-${seatId}`);
+  const applicants = APPLICANTS_CACHE[seatId] || [];
+  if (!panel || !applicants.length) return;
+
+  if (button) {
+    button.disabled = true;
+    button.textContent = "Ranking...";
+  }
+  if (status) status.innerHTML = '<span class="spinner"></span>';
+
+  try {
+    const professionalId = localStorage.getItem("prom_user_id");
+    const res = await fetch(`${API_BASE}/agents/recommendations`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        professional_id: professionalId,
+        mode: "owner",
+        seat_id: seatId,
+        limit: 20,
+      }),
+    });
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}));
+      throw new Error(body.detail || `HTTP ${res.status}`);
+    }
+    const result = await res.json();
+    if (!result.recommendations.length) {
+      renderApplicantsPanel(
+        panel,
+        seatId,
+        applicants,
+        null,
+        `<p class="text-muted text-sm">${result.reasoning || "No ranked applicants."}</p>`
+      );
+      return;
+    }
+
+    const rankById = Object.fromEntries(
+      result.recommendations.map((r) => [r.professional_id, r])
+    );
+    const warningHtml = (result.warnings || [])
+      .map((w) => `<p class="text-sm text-muted" style="margin:0 0 .25rem">${w}</p>`)
+      .join("");
+    const statusHtml = `
+      <p class="text-sm text-muted" style="margin:0 0 .75rem">${result.reasoning || "Sorted by AI fit."}</p>
+      ${warningHtml}
+    `;
+
+    renderApplicantsPanel(panel, seatId, applicants, rankById, statusHtml);
+  } catch (err) {
+    console.error(err);
+    if (status) {
+      status.innerHTML = `<p class="text-muted text-sm">AI ranking failed${err?.message ? `: ${err.message}` : "."}</p>`;
+    }
+    if (button) {
+      button.disabled = false;
+      button.textContent = "Rank by AI fit";
+    }
   }
 }
 

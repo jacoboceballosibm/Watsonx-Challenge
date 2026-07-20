@@ -103,6 +103,8 @@ function logout() {
   localStorage.removeItem("prom_token");
   localStorage.removeItem("prom_user_id");
   localStorage.removeItem("prom_user_name");
+  localStorage.removeItem("prom_professional_id");
+  localStorage.removeItem("prom_user_role");
   window.location.href = "login.html";
 }
 
@@ -767,34 +769,53 @@ function updatePersonalStatusLabel(select, labelId) {
 // ── Agent #7: Recommendations for current user ────────────────────────────────
 async function loadRecommendations() {
   const container = document.getElementById("recs-container");
+  if (!CURRENT_USER_ID) {
+    container.innerHTML = "<p class='text-muted text-sm'>Sign in to see personalized seat recommendations.</p>";
+    return;
+  }
   container.innerHTML = '<span class="spinner"></span>';
   try {
     const result = await apiPost("/agents/recommendations", {
       professional_id: CURRENT_USER_ID,
       mode: "candidate",
+      limit: 5,
     });
     if (!result.recommendations.length) {
-      container.innerHTML = "<p class='text-muted'>No recommendations available.</p>";
+      container.innerHTML = `<p class='text-muted'>${result.reasoning || "No recommendations available."}</p>`;
       return;
     }
+    const warningHtml = (result.warnings || [])
+      .map((w) => `<p class="text-sm text-muted" style="margin-bottom:.35rem">${w}</p>`)
+      .join("");
     container.innerHTML = `
-      <p class="text-sm text-muted" style="margin-bottom:.75rem">${result.reasoning}</p>
+      <p class="text-sm text-muted" style="margin-bottom:.75rem">${result.reasoning || ""}</p>
+      ${warningHtml}
       <ul class="rec-list">
         ${result.recommendations
           .map(
             (r) => `
-          <li class="rec-item">
+          <li class="rec-item" style="cursor:pointer" onclick="window.location.href='seat-detail.html?id=${encodeURIComponent(r.seat_id)}'">
             <div>
-              <div style="font-weight:600;font-size:13px">${r.title || r.name || r.professional_id}</div>
+              <div style="font-weight:600;font-size:13px">${r.title || r.seat_id}</div>
+              <div class="text-sm text-muted">${r.client_name || ""}</div>
               <div class="rec-reason">${r.reason}</div>
+              ${
+                r.aligned_skills && r.aligned_skills.length
+                  ? `<div class="text-sm" style="margin-top:.25rem;color:var(--ibm-blue)">${r.aligned_skills.slice(0, 4).join(" · ")}</div>`
+                  : ""
+              }
             </div>
             <div class="rec-score">${Math.round((r.match_score || 0) * 100)}% match</div>
           </li>`
           )
           .join("")}
-      </ul>`;
-  } catch {
-    container.innerHTML = "<p class='text-muted text-sm'>Could not load recommendations.</p>";
+      </ul>
+      <div style="margin-top:.75rem">
+        <button class="btn btn-secondary btn-sm" type="button" onclick="loadRecommendations()">Refresh recommendations</button>
+      </div>`;
+  } catch (err) {
+    container.innerHTML = `<p class="text-muted text-sm">Could not load recommendations${err?.message ? `: ${err.message}` : "."}</p>
+      <button class="btn btn-secondary btn-sm" type="button" onclick="loadRecommendations()">Retry</button>`;
   }
 }
 
@@ -1180,6 +1201,11 @@ function applyFilters() {
 // Init
 // ══════════════════════════════════════════════════════════════════════════════
 document.addEventListener("DOMContentLoaded", () => {
+  // owner.html also loads prom.js for shared helpers (toast/logout). Skip candidate SPA init there.
+  if (!document.getElementById("page-profile")) {
+    return;
+  }
+
   // Check authentication first
   if (!checkAuth()) {
     return;
